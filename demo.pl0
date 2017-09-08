@@ -1,6 +1,6 @@
 module main;
-	var result: int;
-	procedure fib (arg:int);
+	var result : int;
+	procedure fib (arg : int);
 		var temp:int;
 	begin
 		if arg <= 0 then result := 0; end;
