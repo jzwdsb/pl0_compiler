@@ -1,4 +1,5 @@
 .*
 !.gitignore
 *~
-
+pl0
+*yy.c
