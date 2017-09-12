@@ -11,7 +11,6 @@ import re
 
 
 # 规则声明
-digit        = r"[0-9]"
 
 keywords     = r"const|var|procedure|begin|end|if|then|while|do|read|call|write|writeln|module|int"
 
@@ -23,22 +22,20 @@ operator     = r"\+|-|\*|\/|#|=|<|>|<>|:=|>=|<="
 
 delimiter    = r"[,.;():]"
 
-delim	     = r"\s"
-
-whitespace   = r"\s+"
+whitespace   = r"\s*"
 
 separator    = r"([+\-*/#,.;():\s]|<=|>=|:=|=|<|>)"
 
 print ("""
-        1:      keywords
-        2:      operator
-        3:      delimiter
-        4:      constant
-        5:      identfier
+1:      keywords
+2:      operator
+3:      delimiter
+4:      constant
+5:      identfier
         """)
 
 with open(sys.argv[1], mode='r') as pl0_file:
-# 按行获取 pl0 源码， 每次的词法分析只处理一行
+# 每次的词法分析只处理一行
     content = []
     result = []
     word_error = []
