@@ -1,11 +1,7 @@
 %{/* plo 语言词法分析程序 lex 描述文档*/
-//#include <stdio.h>
 
 int count = 0;
 %}
-
-
-digit			[0-9]	
 
 keyword			const|var|procedure|begin|end|if|then|while|do|read|call|write|writeln|module|int
 
@@ -18,9 +14,8 @@ operator		\+|-|\*|\/|:=|>=|<=|#|=|>|<|<>
 delimiter		[,.;():]
 
 delim			[ \n\t]
+
 whitespace		{delim}+
-
-
 
 %%
 
@@ -44,12 +39,7 @@ whitespace		{delim}+
 					++count;printf("%d\t< %s, 5 >\n", count, yytext);
 				}
 
-{whitespace}	{
-					//++count;printf("\t%d\t(5, %s)\n", count, yytext);
-				}
-
 %%
-
 
 int  main()
 {
