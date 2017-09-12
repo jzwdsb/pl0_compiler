@@ -29,10 +29,19 @@ whitespace   = r"\s+"
 
 separator    = r"([+\-*/#,.;():\s]|<=|>=|:=|=|<|>)"
 
+print ("""
+        1:      keywords
+        2:      operator
+        3:      delimiter
+        4:      constant
+        5:      identfier
+        """)
+
 with open(sys.argv[1], mode='r') as pl0_file:
 # 按行获取 pl0 源码， 每次的词法分析只处理一行
     content = []
     result = []
+    word_error = []
     content = pl0_file.readlines()
     for line in content:
         line = re.split(separator, line)
@@ -53,7 +62,9 @@ with open(sys.argv[1], mode='r') as pl0_file:
             if (re.match(identfier, word)):
                 result.append((word, 5))
                 continue
-
+            word_error.append("invalid word: %s"%(word))
             
         print(line)
     print(result)
+    if len(word_error) != 0:
+        print(word_error)
