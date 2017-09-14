@@ -14,40 +14,31 @@ import static java.util.stream.Collectors.toList;
 
 public class Main {
 
-    static String keywords     = "const|var|procedure|begin|end|if|then|while|do|read|call|write|writeln|module|int";
+    private static String keywords     = "\\s*(const|var|procedure|begin|end|if|then|while|do|read|call|write|writeln|module|int)\\s*";
 
-    static String constant     = "[0-9]+";
+    private static String constant     = "[0-9]+";
 
-    static String identfier    = "[A-Za-z_][A-Za-z_0-9]*";
+    private static String identifier    = "[A-Za-z_][A-Za-z_0-9]*";
 
-    static String operator     = "\\+|-|\\*|\\/|#|=|<|>|<>|:=|>=|<=";
+    private static String operator     = "\\+|-|\\*|/|#|=|<|>|<>|:=|>=|<=";
 
-    static String delimiter    = "[,.;():]";
+    private static String delimiter    = "[,.;():]";
 
-    static String whitespace   = "\\s*";
-
-    static String separator    = "((?<=:=)|(?=:=))|((?<=[+\\-*/#=<>,.;():])|(?=[+\\-*/#=<>./;():]))|\\s+";
+    private static String separator = "((?<=:=)|(?=:=))|((?<=[+\\-*/#=<>,.;():])|(?=[+\\-*/#=<>./;():]))|\\s+";
     public static void main(String[] args) throws IOException {
 	    String filename = args[0];
         File file = new File(filename);
         BufferedReader fileReader = new BufferedReader(new FileReader(file));
         String line;
-        Stream stream;
-        List<Pair<String, Integer>> result = new LinkedList<Pair<String, Integer>>();
+        List<Pair<String, Integer>> result = new LinkedList<>();
 
         while ((line = fileReader.readLine()) != null)
         {
-            stream = Stream.of(line.split(separator)).filter(value -> !value.equals("") );
-            List<String>  words = (List<String>) stream.collect(Collectors.toList());
 
-            if (words.size() != 0)
-            {
-                words.forEach(action -> result.add(matchType(action)));
-                System.out.println(words);
-            }
-            //words.forEach(action -> result.add(matchType(action)));
+            Stream.of(line.split(separator)).filter(value -> !value.equals(""))
+                    .collect(Collectors.toList()).forEach(value -> result.add(matchType(value)));
         }
-        System.out.println(result);
+        result.forEach(value -> { if (value.getValue() != 0) System.out.println(value.getKey() + " : " + value.getValue().toString());});
 
     }
 
@@ -55,10 +46,10 @@ public class Main {
     private static Pattern constant_pattern   = Pattern.compile(constant);
     private static Pattern operator_pattern   = Pattern.compile(operator);
     private static Pattern delimiter_pattern  = Pattern.compile(delimiter);
-    private static Pattern identifier_pattern = Pattern.compile(identfier);
+    private static Pattern identifier_pattern = Pattern.compile(identifier);
 
     @NotNull
-    static Pair<String, Integer> matchType(String word) {
+    private static Pair<String, Integer> matchType(String word) {
         if (keywords_pattern.matcher(word).matches()) {
             return new Pair<>(word, 1);
         }
@@ -78,7 +69,6 @@ public class Main {
         {
             return new Pair<>(word, 5);
         }
-        //throw new IllegalArgumentException("this word is invalid");
         return new Pair<>("",0);
     }
 }
