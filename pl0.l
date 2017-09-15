@@ -19,26 +19,18 @@ whitespace		{delim}+
 
 %%
 
-{keyword}		{
-					++count;printf("%d\t< %s, 1 >\n", count, yytext);
-				}
+{keyword}		{	printf("< %s, 1 >\t",  yytext);}
 
-{operator}		{
-					++count;printf("%d\t< %s, 2 >\n", count, yytext);
-				}
+{operator}		{	printf("< %s, 2 >\t",  yytext);}
 
-{delimiter}		{
-					++count;printf("%d\t< %s, 3 >\n", count, yytext);
-				}
+{delimiter}		{	printf("< %s, 3 >\t",  yytext);}
 
-{constant}		{
-					++count;printf("%d\t< %s, 4 >\n", count, yytext);
-				}
+{constant}		{	printf("< %s, 4 >\t",  yytext);}
 
-{identfier}		{
-					++count;printf("%d\t< %s, 5 >\n", count, yytext);
-				}
+{identfier}		{	printf("< %s, 5 >\t",  yytext);}
 
+\t				{	}
+\n+				{	printf("\n");}
 %%
 
 int  main()
