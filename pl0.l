@@ -2,12 +2,13 @@
 
 int count = 0;
 %}
+%option yylineno case-insensitive
 
 keyword			const|var|procedure|begin|end|if|then|while|do|read|call|write|writeln|module|int
 
-constant		([0-9])+
+constant		[+-]?[0-9]+((\.[0-9]+)|([Ee][+-]?[0-9]))?
 
-identfier		[A-Za-z]+
+identfier		[A-Za-z_][A-Za-z_0-9]*
 
 operator		\+|-|\*|\/|:=|>=|<=|#|=|>|<|<>
 
@@ -29,7 +30,7 @@ whitespace		{delim}+
 
 {identfier}		{	printf("< %s, 5 >\t",  yytext);}
 
-\t				{	}
+\t+				{				 }
 \n+				{	printf("\n");}
 %%
 
