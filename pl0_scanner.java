@@ -28,8 +28,9 @@ public class pl0_scanner {
                     .collect(Collectors.toList())
                     .forEach(value -> result.add(matchType(value)));
         }
-        result.forEach(value -> { if (value.getValue() != 0) System.out.println(value.getKey() +
+        result.forEach(value -> { if (value != null) System.out.println(value.getKey() +
                                         "\t : \t" + value.getValue().toString());});
+		fileReader.close()
     }
     private static Pattern keywords_pattern   = Pattern.compile(keywords);
     private static Pattern constant_pattern   = Pattern.compile(constant);
@@ -43,6 +44,6 @@ public class pl0_scanner {
         if (delimiter_pattern.matcher(word).matches()){ return new Pair<>(word, 3); }
         if (constant_pattern.matcher(word).matches()) { return new Pair<>(word, 4); }
         if (identifier_pattern.matcher(word).matches()){ return new Pair<>(word, 5);}
-        return new Pair<>("",0);
+        return null;
     }
 }

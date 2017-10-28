@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+# -*- coding: utf8 -*- 
 
 """
     python 版本的词法扫描器
