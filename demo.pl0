@@ -1,25 +1,28 @@
-module main;
-	var result : int;
-	procedure fib (arg : int);
-		var temp:int;
-	begin
-		if arg <= 0 then result := 0; end;
-		if arg =  1 then result := 1; end;
-		if arg >  1 then 
-			fib(arg - 1);
-			temp := result;
-			fib(arg - 2)
-			result := result + temp;
-		end;
-	end fib;
+var  m, n, r, q;
 
-	var n : int;
+procedure gcd;
+	begin 
+		while r <> 0 do
+			begin 
+				q := m / n;
+				r := m - q * n;
+				m := n;
+				n := r;
+			end
+	end;
 
 begin 
-	n : = input;
-	while n <> 0 do 
-		fib(n);
-		output := result;
-		n := input;
+	read m;
+	read n;
+	if m < n then
+		begin 
+			r := n;
+			m := n;
+			n := r;
+		end;
+	begin 
+		r := 1;
+		call gcd;
+		write m;
 	end;
-end main.
+end.
