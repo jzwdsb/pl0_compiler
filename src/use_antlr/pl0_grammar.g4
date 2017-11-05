@@ -44,7 +44,7 @@ expression:			('-')? term (('+'|'-') term)*;
 
 
 /*	term rule*/ 
-term:				factor(('*'|'/') factor)*;
+term:				factor(('*'|'/'|'%') factor)*;
 
 
 /*	factor rule*/
