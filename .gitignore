@@ -5,3 +5,14 @@ pl0
 *yy.c*
 *iml
 scanner
+*iml
+*class
+package-list
+src/java_version/.idea/*
+src/*/.vscode/*
+src/cpp_version/cmake-build-debug/*
+src/cpp_version/CMakeLists.txt
+src/cpp_version/pl0_scanner
+src/use_antlr/*java
+src/use_antlr/*class
+src/use_antlr/*tokens
