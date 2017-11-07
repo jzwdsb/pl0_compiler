@@ -11,55 +11,32 @@
 #define  jump_blank()   \
 			while (isblank(ch)) ch = scanner->readChar()
 
-Lexer::Lexer(Scanner* scer):scanner(scer),lex_table()
+Lexer::Lexer(Scanner* scer):scanner(scer),token_table()
 {
 
 }
 
-Item Lexer::get_token()
+// 该函数取出下一个词素并返回
+std::string Lexer::get_token()
 {
 	prepare();
 	std::string curr_token;
-	curr_token = lex_table.front();
-	lex_table.pop_front();
-	Item curr_item(curr_item);
-	if (key_word_set.find(curr_token) not_eq key_word_set.end())
-	{
-		curr_item.type = type::keyword;
-		return curr_item;
-	}
-	if (operator_set.find(curr_token) not_eq operator_set.end())
-	{
-		curr_item.type = type::_operator;
-		return curr_item;
-	}
-	if (delimiter_set.find(curr_token) not_eq delimiter_set.end())
-	{
-		curr_item.type = type::delimiter;
-		return curr_item;
-	}
-	if (std::regex_match(curr_token, std::regex(R"([0-9]+)")))
-	{
-		curr_item.type = type::constant;
-		return curr_item;
-	}
-	if (std::regex_match(curr_token, std::regex(R"([A-Za-z_][A-Za-z0-9_]*)")))
-	{
-		curr_item.type = type::identifier;
-		return curr_item;
-	}
+	curr_token = token_table.front();
+	token_table.pop_front();
 	
+	return curr_token;
 }
 
-Item Lexer::next_token()
+//该函数返回下一个词素但是不取出
+std::string Lexer::next_token()
 {
 	
-	return Item();
+	return token_table.front();
 }
 
 void Lexer::prepare()
 {
-	if (lex_table.empty() and not scanner->isEof())
+	if (token_table.empty() and not scanner->isEof())
 	{
 		char ch = 0;
 		std::vector<std::string> words;
@@ -83,7 +60,7 @@ void Lexer::prepare()
 					curr_word.push_back(ch);
 					ch = scanner->readChar();
 				}while (isalpha(ch) or isdigit(ch) or ch == '_');
-				lex_table.push_back(std::move(curr_word));
+				token_table.push_back(std::move(curr_word));
 				curr_word.clear();
 			}
 			
@@ -97,7 +74,7 @@ void Lexer::prepare()
 					curr_word.push_back(ch);
 					ch = scanner->readChar();
 				}while (isdigit(ch));
-				lex_table.push_back(curr_word);
+				token_table.push_back(curr_word);
 				curr_word.clear();
 			}
 			
@@ -111,7 +88,7 @@ void Lexer::prepare()
 					curr_word.push_back(ch);
 					ch = scanner->readChar();
 				}while (operator_string.find(ch) not_eq std::string::npos);
-				lex_table.push_back(curr_word);
+				token_table.push_back(curr_word);
 				curr_word.clear();
 			}
 			
@@ -124,7 +101,7 @@ void Lexer::prepare()
 					curr_word.push_back(ch);
 					ch = scanner->readChar();
 				}while (delimiter_string.find(ch) not_eq std::string::npos);
-				lex_table.push_back(curr_word);
+				token_table.push_back(curr_word);
 				curr_word.clear();
 			}
 		}
@@ -148,12 +125,11 @@ void Lexer::prepare()
 		}
 		for ( std::string& word : words)
 		{
-			lex_table.push(std::move(word));
+			token_table.push(std::move(word));
 		}
 		delete current_line;
 		*/
 	}
 }
-
 
 

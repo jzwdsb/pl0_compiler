@@ -13,14 +13,13 @@ class Lexer
 {
 public:
 	explicit Lexer(Scanner* scer);
-	Item get_token();
-	Item next_token();
+	std::string get_token();
+	std::string next_token();
 	
 private:
-	
 	void prepare();
 	Scanner* scanner;
-	std::deque<std::string> lex_table;
+	std::deque<std::string>token_table;
 };
 
 
