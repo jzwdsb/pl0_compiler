@@ -12,12 +12,13 @@ class SymbolTable
 {
 public:
 	explicit SymbolTable(SymbolTable* prev = nullptr);
-	SymbolTable& add(const Item&);
-	SymbolTable& add(const Item*);
-	Item* get(const std::string& id);
+	SymbolTable& add(const Symbol&);
+	SymbolTable& add(const Symbol*);
+	Symbol* get(const std::string& id);
 private:
-	std::unordered_map<std::string, Item> table;
+	std::unordered_map<std::string, Symbol> table;
 	SymbolTable* prev;
+	int level;
 };
 
 
