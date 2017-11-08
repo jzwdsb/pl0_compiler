@@ -171,7 +171,7 @@ void program()
 	}
 	else
 	{
-		error(19);
+		error(9);
 	}
 }
 
