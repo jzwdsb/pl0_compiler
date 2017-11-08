@@ -6,7 +6,7 @@ program:	block '.';
 
 
 /*	block rule*/
-block:	(const_declaration)? (var_declaration)? (procedure_declaration)? (statement)?;
+block:	const_declaration var_declaration procedure_declaration statement;
 
 
 /*	const_declaration rule*/
