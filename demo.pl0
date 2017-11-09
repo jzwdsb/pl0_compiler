@@ -25,4 +25,4 @@ begin
 		call gcd;
 		write m;
 	end;
-end.
+end .
