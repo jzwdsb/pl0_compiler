@@ -11,20 +11,12 @@
 
 #include "SymbolTable.h"
 
-enum type
-{
-	keyword,
-	_operator,
-	delimiter,
-	constant,
-	identifier
-};
 
 enum object
 {
 	constant,
 	variable,
-	arrray,
+	array,
 	procedure
 };
 
@@ -61,7 +53,8 @@ struct Symbol
 	int size;           // size, used by procedure
 	Symbol():name(), type(0), value(0), level(0), addr(0),size(0){};
 	Symbol(const Symbol&) = default;
-	Symbol(const std::string& name):name(name),type(0),value(0), level(0),addr(0), size(0){};
+	Symbol(const std::string& name):
+		name(name),type(0),value(0), level(0),addr(0), size(0){};
 };
 
 
@@ -71,7 +64,6 @@ extern std::unordered_set<std::string> key_word_set;
 // 包含所有操作符所使用的字符
 extern std::string operator_string;
 extern std::unordered_set<std::string> operator_set;
-
 extern std::unordered_set<std::string> rel_op;
 
 
@@ -83,10 +75,10 @@ extern std::string err_msg[];
 
 
 
-
-// 以下函数若匹配成功则生成相应的目标代码，若失败则将词素推回以进行下一步分析
-
-void generate_code();
+void generate_code(int, int, int);
+/** 以下函数若匹配成功则生成相应的 类P code代码，
+ * 通过向前查看一个移进符号选择移进规则
+ * 错误处理通过 error 输出错误信息后 exit(-1) 直接退出*/
 
 void program();
 void block();
@@ -99,5 +91,7 @@ void expression();
 void term();
 void factor();
 void error(int err_code);
+
+/**	解释器*/
 void interpret();
 #endif //CPP_VERSION_PL0_H

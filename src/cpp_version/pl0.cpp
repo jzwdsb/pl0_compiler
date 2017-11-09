@@ -23,8 +23,11 @@ int PC;
 /**	指令寄存器*/
 instruction IR;
 
-/**运行时栈，用来存储过程调用返回地址*/
+/** 运行时栈，用来存储过程所需局部变量*/
 std::vector<int> runtime_stack;
+
+/** 运行时程序调用栈，用来存储过程跳转时的上下文*/
+std::vector<int> call_stack;
 
 /**	定义全局词法分析器*/
 Scanner *scanner = new Scanner("../../demo.pl0");
@@ -118,45 +121,13 @@ SymbolTable  *local_space = &top;
 /** 生成的类P Code 代码表, 对应于程序的text(正文段)*/
 std::vector<instruction> code;
 
-
-/** 当前层级*/
-int level = 0;
-
-/** 当前 procedure 长度*/
-int prod_size = 0;
-
-enum type get_type(const std::string& token)
-{
-	if (key_word_set.find(token) not_eq key_word_set.end())
-	{
-		return  type::keyword;
-	}
-	if (operator_set.find(token) not_eq operator_set.end())
-	{
-		return type::_operator;
-	}
-	if (delimiter_set.find(token) not_eq delimiter_set.end())
-	{
-		return type::delimiter;
-	}
-	if (std::regex_match(token, std::regex(R"([0-9]+)")))
-	{
-		return type::constant;
-	}
-	if (std::regex_match(token, std::regex(R"([A-Za-z_][A-Za-z0-9_]*)")))
-	{
-		return type::identifier;
-	}
-	// 控制流到此出说明出现没有任何规则规则可以匹配的 token
-	// 应当进行错误处理
-	error(19);
-}
-
+/** 对应于每个 procedure 的局部变量*/
+std::unordered_map<int, std::vector<int>> local_variable;
 
 __always_inline
 void generate_code(int OP, int L, int M)
 {
-	code.emplace_back(OP, L, M);
+	generate_code(OP, L, M);
 }
 
 
@@ -192,7 +163,61 @@ void const_declaration()
 	std::string curr_token = lexer->next_token();
 	if (curr_token == "const")
 	{
-	
+		
+		curr_token = lexer->get_token();
+		if (isalpha(curr_token[0]) or curr_token[0] == '_')
+		{
+			Symbol curr_sym(curr_token);
+			curr_sym.type = object::constant;
+			curr_sym.level = local_space->get_level();
+			curr_token = lexer->get_token();
+			if (curr_token == "=")
+			{
+				curr_token = lexer->get_token();
+				curr_sym.value = boost::lexical_cast<int>(curr_sym);
+				local_space->add(curr_sym);
+				
+			} else
+			{
+				error(3);
+			}
+		} else
+		{
+			error(19);
+		}
+		while (lexer->next_token() == ",")
+		{
+			curr_token = lexer->get_token();
+			curr_token = lexer->get_token();
+			if (isalpha(curr_token[0]) or curr_token[0] == '_')
+			{
+				Symbol curr_sym(curr_token);
+				curr_sym.type = object::constant;
+				curr_sym.level = local_space->get_level();
+				curr_token = lexer->get_token();
+				if (curr_token == "=")
+				{
+					curr_token = lexer->get_token();
+					curr_sym.value = boost::lexical_cast<int>(curr_sym);
+					local_space->add(curr_sym);
+					
+				} else
+				{
+					error(3);
+				}
+			} else
+			{
+				error(19);
+			}
+		}
+		if (lexer->next_token() == ";")
+		{
+			curr_token = lexer->get_token();
+		}
+		else
+		{
+			error(17);
+		}
 	}
 }
 
@@ -211,13 +236,35 @@ void procedure_declaration()
 	std::string curr_token = lexer->next_token();
 	if (curr_token == "procedure")
 	{
-		while (curr_token == "procedure")
+		while (lexer->next_token() == "procedure")
 		{
 			curr_token = lexer->get_token();
-			Symbol curr_prod(curr_token);
-			curr_prod.type = object::procedure;
-			curr_prod.addr = static_cast<int>(code.size());
-			
+			if (isalpha(curr_token[0]) or curr_token[0])
+			{
+				Symbol curr_prod(curr_token);
+				curr_prod.type = object::procedure;
+				curr_prod.addr = static_cast<int>(code.size());
+				if (lexer->next_token() == ";")
+				{
+					curr_token = lexer->get_token();
+					block();
+					if (lexer->next_token() == ";")
+					{
+						curr_token = lexer->get_token();
+						/** 一个过程的在正文区的长度等于 结束位置 - 开始位置*/
+						curr_prod.size = static_cast<int>(code.size() - curr_prod.addr);
+						local_space->add(curr_prod);
+					}
+					else
+					{
+						error(17);
+					}
+				}
+				else
+				{
+					error(17);
+				}
+			}
 		}
 	}
 }
@@ -225,37 +272,45 @@ void procedure_declaration()
 void statement()
 {
 	std::string curr_token;
+	/**	为了避免在if else 选择分支的时间开销，选择使用 hash 散列法将移进符号映射到操作*/
 	static std::unordered_map<std::string, std::function<void()>> oper_table
 		({
 			 {
-				"call", [&](){}
+				"call", [&]{}
 			 },
 			 {
-				 "begin", [&](){statement();
+				 "begin", [&]{statement();
 				                while(lexer->next_token() == ";")
-				                {;statement();}
+				                {lexer->get_token();statement();}
 			                    if (lexer->next_token() == "end")
-			                    {;}
+			                    {}
 			                    else error(17);}
 			 },
 			 {
-				 "if",[&](){condition();
+				 "if",[&]{condition();int jmp_pos = 0;
 				            if (lexer->next_token() == "then")
-				            {lexer->get_token();statement();}
+				            {   generate_code(fct::jpc,0, 0);
+					            jmp_pos = static_cast<int>(code.size() - 1);
+					            lexer->get_token();statement();}
+				            else
+				            {error(16);}
+				            code[jmp_pos].M = static_cast<int>(code.size() - 1);
 			                if (lexer->next_token() == "else")
-			                {statement();}}
+			                {   lexer->get_token();
+				                statement();}}
 			 },
 			 {
-				 "while", [&](){condition();
+				 "while", [&]{condition();
 				                if (lexer->next_token() == "do")
 				                {statement();}
 			                    else error(18);}
 			 },
 			 {
-				 "read", [&](){}
+				 "read", [&]{generate_code(fct::sio, 0, 2);}
 			 },
 			 {
-				 "write", [&](){ expression();}
+				 "write", [&]{ expression();
+				                generate_code(fct::sio, 0, 1);}
 			 },
 		 });
 	
@@ -295,22 +350,22 @@ void condition()
 	static std::unordered_map<std::string, std::function<void()>> relation_OP
 		({
 			 {
-				 "=", [&]{code.emplace_back(fct::opr, 0, 8);}
+				 "=", [&]{generate_code(fct::opr, 0, 8);}
 			 },
 			 {
-				"<>", [&]{code.emplace_back(fct::opr, 0, 9);}
+				"<>", [&]{generate_code(fct::opr, 0, 9);}
 			 },
 			 {
-				">", [&]{code.emplace_back(fct::opr, 0, 10);}
+				">", [&]{generate_code(fct::opr, 0, 10);}
 			 },
 			 {
-				">=", [&]{code.emplace_back(fct::opr, 0, 11);}
+				">=", [&]{generate_code(fct::opr, 0, 11);}
 			 },
 			 {
-				"<", [&]{code.emplace_back(fct::opr, 0, 12);}
+				"<", [&]{generate_code(fct::opr, 0, 12);}
 			 },
 			 {
-				"<=", [&]{code.emplace_back(fct::opr, 0, 13);}
+				"<=", [&]{generate_code(fct::opr, 0, 13);}
 			 }
 			 
 		 });
@@ -318,7 +373,7 @@ void condition()
 	{
 		curr_token = lexer->get_token();
 		expression();
-		code.emplace_back(fct::opr, 0, 6);
+		generate_code(fct::opr, 0, 6);
 	}
 	else
 	{
@@ -347,7 +402,7 @@ void expression()
 		term();
 		if (curr_token == "-")
 		{
-			code.emplace_back(fct::opr, 0, 1);
+			generate_code(fct::opr, 0, 1);
 		}
 		while (lexer->next_token() == "+" or lexer->next_token() == "-")
 		{
@@ -356,10 +411,10 @@ void expression()
 			switch (curr_token[0])
 			{
 				case '+':
-					code.emplace_back(fct::opr, 0, 2);
+					generate_code(fct::opr, 0, 2);
 					break;
 				case '-':
-					code.emplace_back(fct::opr, 0, 3);
+					generate_code(fct::opr, 0, 3);
 					break;
 				default:
 					break;
@@ -378,10 +433,10 @@ void expression()
 			switch (curr_token[0])
 			{
 				case '+':
-					code.emplace_back(fct::opr, 0, 2);
+					generate_code(fct::opr, 0, 2);
 					break;
 				case '-':
-					code.emplace_back(fct::opr, 0, 3);
+					generate_code(fct::opr, 0, 3);
 					break;
 				default:
 					break;
@@ -401,13 +456,13 @@ void term()
 		switch (curr_token[0])
 		{
 			case '*':
-				code.emplace_back(fct::opr, 0, 4);
+				generate_code(fct::opr, 0, 4);
 				break;
 			case '/':
-				code.emplace_back(fct::opr, 0, 5);
+				generate_code(fct::opr, 0, 5);
 				break;
 			case '%':
-				code.emplace_back(fct::opr, 0, 7);
+				generate_code(fct::opr, 0, 7);
 			default:
 				break;
 		}
@@ -444,11 +499,28 @@ void factor()
 	else if (isnum(curr_token))
 	{
 		int num = boost::lexical_cast<int>(curr_token);
-		runtime_stack.push_back(num);
+		generate_code(fct::lit, 0, num);
 	}
 	else if ((symbol = local_space->get(curr_token)) not_eq nullptr)
 	{
-		runtime_stack.push_back(symbol->value);
+		
+		switch (symbol->type)
+		{
+			case object::constant :
+				generate_code(fct::lit, 0, symbol->value);
+				break;
+			case object::variable :
+				generate_code(fct::lod, symbol->level, symbol->addr);
+				break;
+			case object::array :
+				// TODO here is going to implement
+				break;
+			case object::procedure :
+				error(21);
+				break;
+			default:
+				break;
+		}
 	}
 	else
 	{
@@ -495,6 +567,8 @@ void interpret()
 					case 0:
 						/**	opr 0 0
 						 * 		return to the caller from a procedure*/
+						PC = call_stack.back();
+						call_stack.pop_back();
 						++PC;
 						break;
 					case 1:
@@ -608,20 +682,45 @@ void interpret()
 			case fct::sto :
 				break;
 			case fct::cal :
+				/**	将当前 PC 入栈保存调用链*/
+				call_stack.push_back(::PC);
+				::PC = IR.M;
 				break;
 			case fct::inc :
+				runtime_stack.resize(runtime_stack.size() + IR.M);
+				++PC;
 				break;
 			case fct::jmp :
+				PC = IR.M;
 				break;
 			case fct::jpc :
+				if (runtime_stack[ESP] == 0)
+				{
+					PC = IR.M;
+				}
 				break;
 			case fct::sio :
+				switch(IR.M)
+				{
+					case 1:
+						std::cout << runtime_stack[ESP];
+						--ESP;
+						++PC;
+						break;
+					case 2:
+						int num ;
+						std::cin >> num;
+						runtime_stack[++ESP] = num;
+						break;
+					default:
+						error(25);
+				}
 				break;
 			default:
 				error(25);
 		}
 		
 	}while (ESP not_eq 0);
-	
-	
 }
+
+#undef stack_operate
