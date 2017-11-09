@@ -6,7 +6,7 @@
 #include "pl0.h"
 
 
-/**	解释程序的入口*/
+/**	主程序的入口*/
 int main ()
 {
 	program();
