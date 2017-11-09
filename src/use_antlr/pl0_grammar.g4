@@ -6,31 +6,31 @@ program:	block '.';
 
 
 /*	block rule*/
-block:	const_declaration var_declaration procedure_declaration statement;
+block:	(const_declaration)?  (var_declaration)? (procedure_declaration)? (statement)?;
 
 
 /*	const_declaration rule*/
-const_declaration:	('const' Ident '=' Number (',' Ident '=' Number)*)?;
+const_declaration:	'const' Ident '=' Number (',' Ident '=' Number)*;
 
 
 /*	var_declaration rule*/
-var_declaration:	(('int'|'var') Ident (',' Ident)* ';')?;
+var_declaration:	('int'|'var') Ident (',' Ident)* ';';
 
 
 /*	procedure_declaration rule*/
-procedure_declaration:	('procedure' Ident ';' block ';')?;
+procedure_declaration:	'procedure' Ident ';' block ';';
 
 
 /*	statement rule*/
-statement:			( Ident ':=' expression
+statement:			 Ident ':=' expression
 					| 'call' Ident
-					| 'begin' statement (';' statement)* 'end'
+					| 'begin' statement (';' (statement)?)* 'end'
 					| 'if' condition 'then' statement
 					| 'while' condition 'do' statement
 					| 'read' Ident
 					| 'write' expression
 					| expression 
-					)?;
+					;
 
 
 /*	condition rule*/
