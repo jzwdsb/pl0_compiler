@@ -127,7 +127,7 @@ std::unordered_map<int, std::vector<int>> local_variable;
 __always_inline
 void generate_code(int OP, int L, int M)
 {
-	generate_code(OP, L, M);
+	code.emplace_back(OP, L, M);
 }
 
 
