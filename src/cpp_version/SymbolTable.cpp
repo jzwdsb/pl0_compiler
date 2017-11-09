@@ -7,7 +7,7 @@ SymbolTable::SymbolTable(SymbolTable *prev = nullptr):table(), prev(prev)
 {
 	if (prev not_eq nullptr)
 	{
-		level = prev->level;
+		level = prev->level + 1;
 	}
 	else
 	{
@@ -32,6 +32,7 @@ SymbolTable &SymbolTable::add(const Symbol* item_ptr)
 	this->add(*item_ptr);
 	return *this;
 }
+
 Symbol *SymbolTable::get(const std::string& id)
 {
 	for (SymbolTable* curr_table = this;
@@ -45,6 +46,11 @@ Symbol *SymbolTable::get(const std::string& id)
 		}
 	}
 	return nullptr;
+}
+
+int SymbolTable::get_level()
+{
+	return this->level;
 }
 
 
