@@ -2,7 +2,6 @@
 // Created by manout on 17-11-5.
 //
 
-#include <regex>
 #include <iostream>
 #include <boost/lexical_cast.hpp>
 #include "pl0.h"
@@ -51,7 +50,8 @@ std::unordered_set<std::string> key_word_set
 	    "write",
 	    "repeat",
 	    "odd",
-	    "procedure"
+	    "procedure",
+	    "until"
 	 });
 
 // 为了方便而声明的操作符字符串，同时也是为了以后的词法分析方便扩展
@@ -75,7 +75,7 @@ std::unordered_set<std::string> delimiter_set
 		",", ";","."
 	 });
 
-std::string err_msg[] =
+std::array<std::string, 32> err_msg =
 	{
 		/*  0*/      "",
 		/*  1*/      "Found ':=' when expecting '='",
@@ -122,7 +122,7 @@ SymbolTable  *local_space = &top;
 std::vector<instruction> code;
 
 /** 对应于每个 procedure 的局部变量*/
-std::unordered_map<int, std::vector<int>> local_variable;
+std::unordered_map<int, std::unordered_map<int, int>> local_variable;
 
 __always_inline
 void generate_code(int OP, int L, int M)
@@ -150,9 +150,12 @@ void block()
 {
 	SymbolTable* prev = local_space;
 	local_space = new SymbolTable(prev);
+	auto pos = code.size();
+	generate_code(fct::jmp, 0, 0);
 	const_declaration();
 	var_declaration();
 	procedure_declaration();
+	code[pos].M = static_cast<int>(code.size());
 	statement();
 	delete local_space;
 	local_space = prev;
@@ -160,35 +163,13 @@ void block()
 
 void const_declaration()
 {
-	std::string curr_token = lexer->next_token();
-	if (curr_token == "const")
+	std::string curr_token ;
+	if (lexer->next_token() == "const")
 	{
-		
 		curr_token = lexer->get_token();
-		if (isalpha(curr_token[0]) or curr_token[0] == '_')
+		curr_token = lexer->get_token();
+		if (key_word_set.find(curr_token) == key_word_set.end())
 		{
-			Symbol curr_sym(curr_token);
-			curr_sym.type = object::constant;
-			curr_sym.level = local_space->get_level();
-			curr_token = lexer->get_token();
-			if (curr_token == "=")
-			{
-				curr_token = lexer->get_token();
-				curr_sym.value = boost::lexical_cast<int>(curr_sym);
-				local_space->add(curr_sym);
-				
-			} else
-			{
-				error(3);
-			}
-		} else
-		{
-			error(19);
-		}
-		while (lexer->next_token() == ",")
-		{
-			curr_token = lexer->get_token();
-			curr_token = lexer->get_token();
 			if (isalpha(curr_token[0]) or curr_token[0] == '_')
 			{
 				Symbol curr_sym(curr_token);
@@ -209,14 +190,44 @@ void const_declaration()
 			{
 				error(19);
 			}
-		}
-		if (lexer->next_token() == ";")
+			while (lexer->next_token() == ",")
+			{
+				curr_token = lexer->get_token();
+				curr_token = lexer->get_token();
+				if (key_word_set.find(curr_token) == key_word_set.end())
+				{
+					if (isalpha(curr_token[0]) or curr_token[0] == '_')
+					{
+						Symbol curr_sym(curr_token);
+						curr_sym.type = object::constant;
+						curr_sym.level = local_space->get_level();
+						curr_token = lexer->get_token();
+						if (curr_token == "=")
+						{
+							curr_token = lexer->get_token();
+							curr_sym.value = boost::lexical_cast<int>(curr_sym);
+							local_space->add(curr_sym);
+							
+						} else
+						{
+							error(3);
+						}
+					} else
+					{
+						error(19);
+					}
+				}
+				if (lexer->next_token() == ";")
+				{
+					curr_token = lexer->get_token();
+				} else
+				{
+					error(17);
+				}
+			}
+		}else
 		{
-			curr_token = lexer->get_token();
-		}
-		else
-		{
-			error(17);
+			error(19);
 		}
 	}
 }
@@ -224,48 +235,91 @@ void const_declaration()
 void var_declaration()
 {
 	std::string curr_token = lexer->next_token();
+	int variable_count = 0;
 	if (curr_token == "int" or curr_token == "var" )
 	{
-	
+		curr_token = lexer->get_token(), lexer->get_token();
+		if (key_word_set.find(curr_token) == key_word_set.end())
+		{
+			
+			Symbol curr_sym(curr_token);
+			curr_sym.level = local_space->get_level();
+			curr_sym.type = object::variable;
+			curr_sym.addr = variable_count;
+			local_space->add(curr_sym);
+			local_variable[curr_sym.level][curr_sym.addr] = 0;
+			++variable_count;
+			if (lexer->next_token() == ",")
+			{
+				do
+				{
+					curr_token = lexer->get_token(), lexer->get_token();
+					curr_sym.name = curr_token;
+					curr_sym.level = local_space->get_level();
+					curr_sym.type = object::variable;
+					curr_sym.addr = variable_count;
+					local_space->add(curr_sym);
+					local_variable[curr_sym.level][curr_sym.addr] = 0;
+					++variable_count;
+				}while (lexer->next_token() == ",");
+				if (lexer->next_token() == ";")
+				{
+					lexer->get_token();
+				}else
+				{
+					error(17);
+				}
+			}
+		}else
+		{
+			error(19);
+		}
+		
+		
 	}
 
 }
 
 void procedure_declaration()
 {
-	std::string curr_token = lexer->next_token();
-	if (curr_token == "procedure")
+	std::string curr_token;
+	if (lexer->next_token() == "procedure")
 	{
-		while (lexer->next_token() == "procedure")
+		
+		do
 		{
-			curr_token = lexer->get_token();
-			if (isalpha(curr_token[0]) or curr_token[0])
+			curr_token = lexer->get_token(), lexer->get_token();
+			if (key_word_set.find(curr_token) == key_word_set.end())
 			{
-				Symbol curr_prod(curr_token);
-				curr_prod.type = object::procedure;
-				curr_prod.addr = static_cast<int>(code.size());
-				if (lexer->next_token() == ";")
+				if (isalpha(curr_token[0]) or curr_token[0])
 				{
-					curr_token = lexer->get_token();
-					block();
+					Symbol curr_prod(curr_token);
+					curr_prod.type = object::procedure;
+					curr_prod.addr = static_cast<int>(code.size());
 					if (lexer->next_token() == ";")
 					{
 						curr_token = lexer->get_token();
-						/** 一个过程的在正文区的长度等于 结束位置 - 开始位置*/
-						curr_prod.size = static_cast<int>(code.size() - curr_prod.addr);
-						local_space->add(curr_prod);
-					}
-					else
+						block();
+						if (lexer->next_token() == ";")
+						{
+							curr_token = lexer->get_token();
+							/** 一个过程的在正文区的长度等于 结束位置 - 开始位置*/
+							curr_prod.size = static_cast<int>(code.size() - curr_prod.addr);
+							local_space->add(curr_prod);
+						} else
+						{
+							error(17);
+						}
+					} else
 					{
 						error(17);
 					}
 				}
-				else
-				{
-					error(17);
-				}
+			}else
+			{
+				error(19);
 			}
-		}
+		}while(lexer->next_token() == "procedure");
 	}
 }
 
@@ -330,8 +384,7 @@ void statement()
 		{
 			curr_token = lexer->get_token();
 			expression();
-			ident->value = runtime_stack.back();
-			
+			generate_code(fct::sto, ident->level, ident->addr);
 		}
 		else
 		{
@@ -678,8 +731,13 @@ void interpret()
 				}
 				break;
 			case fct::lod :
+				++ESP;
+				runtime_stack[ESP] = local_variable[IR.L][IR.M];
+				++PC;
 				break;
 			case fct::sto :
+				local_variable[IR.L][IR.M] = runtime_stack[ESP];
+				++PC;
 				break;
 			case fct::cal :
 				/**	将当前 PC 入栈保存调用链*/

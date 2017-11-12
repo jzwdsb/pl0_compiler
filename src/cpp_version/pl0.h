@@ -33,7 +33,7 @@ enum fct
 	sio
 };
 
-/* 类P Code 指令类型， 包含三个字段，指令f, 层差l, 和另一个操作数a*/
+/** 类P Code 指令类型， 包含三个字段，指令OP, 层差L, 和另一个操作数M*/
 struct instruction
 {
 	enum fct OP;
@@ -58,20 +58,18 @@ struct Symbol
 };
 
 
-extern std::unordered_set<std::string> key_word_set;
 
-// 为了方便而声明的操作符字符串，同时也是为了以后的词法分析方便扩展
-// 包含所有操作符所使用的字符
+/**
+ * 为了方便而声明的操作符字符串，同时也是为了以后的词法分析方便扩展
+ * 包含所有操作符所使用的字符 */
 extern std::string operator_string;
-extern std::unordered_set<std::string> operator_set;
 extern std::unordered_set<std::string> rel_op;
 
 
-// 为了方便而声明的分隔符字符串，包含所有分割符用到的字符
+/** 为了方便而声明的分隔符字符串，包含所有分割符用到的字符 */
 extern std::string delimiter_string;
-extern std::unordered_set<std::string> delimiter_set;
 
-extern std::string err_msg[];
+extern std::array<std::string, 32> err_msg;
 
 
 
