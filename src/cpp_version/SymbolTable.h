@@ -14,8 +14,8 @@ public:
 	explicit SymbolTable(SymbolTable* prev = nullptr);
 	SymbolTable& add(const Symbol&);
 	SymbolTable& add(const Symbol*);
-	int get_level();
 	Symbol* get(const std::string& id);
+	int get_level();
 private:
 	std::unordered_map<std::string, Symbol> table;
 	SymbolTable* prev;
