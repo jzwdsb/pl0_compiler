@@ -14,7 +14,7 @@ class Lexer
 public:
 	explicit Lexer(Scanner* scer);
 	std::string get_token();
-	std::string next_token();
+	const std::string & next_token();
 	
 private:
 	void prepare();

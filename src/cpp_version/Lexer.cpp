@@ -8,15 +8,13 @@
 #include <boost/algorithm/string/split.hpp>
 #include <regex>
 
-#define  jump_blank()   \
-			while (isblank(ch)) ch = scanner->readChar()
 
 Lexer::Lexer(Scanner* scer):scanner(scer),token_table()
 {
 
 }
 
-// 该函数取出下一个词素并返回
+/** 该函数取出下一个词素并返回*/
 std::string Lexer::get_token()
 {
 	prepare();
@@ -27,22 +25,24 @@ std::string Lexer::get_token()
 	return curr_token;
 }
 
-//该函数返回下一个词素但是不取出
-std::string Lexer::next_token()
+/** 该函数返回下一个词素但是不取出 */
+const std::string & Lexer::next_token()
 {
-	
+	prepare();
 	return token_table.front();
 }
+
+
+#define  jump_blank()   while (isblank(ch)) ch = scanner->readChar()
 
 void Lexer::prepare()
 {
 	if (token_table.empty() and not scanner->isEof())
 	{
 		char ch = 0;
-		std::vector<std::string> words;
 		std::string curr_word;
 		ch = scanner->readChar();
-		/*  一次处理一行
+		/**  一次处理一行
 		    遍历一行主要寻找的模式有
 		    标识符
 		    字面量
@@ -106,10 +106,6 @@ void Lexer::prepare()
 			}
 		}
 		/*
-		if (current_line == nullptr)
-		{
-			return;
-		}
 		//先按空白字符划分，之后再按分隔符划分
 		boost::split(words, *current_line, boost::is_any_of(R"( \n\t,)"));
 		/*boost::split(words, *current_line,
@@ -132,4 +128,4 @@ void Lexer::prepare()
 	}
 }
 
-
+#undef jump_blank
