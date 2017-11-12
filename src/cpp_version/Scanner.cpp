@@ -4,7 +4,7 @@
 
 #include "Scanner.h"
 
-Scanner::Scanner(const std::string &path):ch(0), file(path)
+Scanner::Scanner(const std::string &path):it(nullptr), file(path)
 {
 
 }
@@ -16,25 +16,10 @@ Scanner::~Scanner()
 
 char Scanner::readChar()
 {
-	if (not file.eof())
-	{
-		do
-		{
-			ch = static_cast<char>(file.get());
-		}while (not file.eof());
-	}
-	else
-	{
-		ch = -1;
-	}
+	prepare();
+	char ch = *it;
+	++it;
 	return ch;
-}
-
-char Scanner::nextChar()
-{
-	auto next = static_cast<char>(file.get());
-	file.unget();
-	return next;
 }
 
 bool Scanner::isEof()
@@ -42,20 +27,11 @@ bool Scanner::isEof()
 	return file.eof();
 }
 
-std::string* Scanner::readLine()
+void Scanner::prepare()
 {
-	std::string* line = new std::string();
-	if ( not file.eof())
+	if (it == buffer.end() and not file.eof())
 	{
-		getline(file, *line, '\n');
-		return line;
-	}
-	else
-	{
-		delete line;
-		return nullptr;
+		getline(file, buffer);
+		it = buffer.begin();
 	}
 }
-
-
-

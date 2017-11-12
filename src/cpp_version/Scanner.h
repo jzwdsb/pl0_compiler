@@ -7,20 +7,20 @@
 
 #include <string>
 #include <fstream>
+#include <queue>
 
 class Scanner
 {
 public:
 	explicit Scanner (const std::string& path);
 	virtual ~Scanner();
-	std::string* readLine();
 	char readChar();
-	char nextChar();
 	bool isEof();
 	
 private:
-	char ch;
-	std::string curr_line;
+	void prepare();
+	std::string ::iterator it;
+	std::string buffer;
 	std::fstream file;
 };
 
