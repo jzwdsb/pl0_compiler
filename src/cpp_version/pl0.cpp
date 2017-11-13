@@ -274,8 +274,6 @@ void var_declaration()
 		{
 			error(19);
 		}
-		
-		
 	}
 
 }
@@ -330,43 +328,99 @@ void statement()
 	static std::unordered_map<std::string, std::function<void()>> oper_table
 		({
 			 {
-				"call", [&]{}
+				"call", [&]
+				        {
+					        Symbol *procedure = local_space->get(lexer->get_token());
+					        if (procedure not_eq nullptr)
+					        {
+						        generate_code(fct::cal, procedure->level, procedure->addr);
+					        } else
+					        {
+						        error(6);
+					        }
+				        }
 			 },
 			 {
-				 "begin", [&]{statement();
-				                while(lexer->next_token() == ";")
-				                {lexer->get_token();statement();}
-			                    if (lexer->next_token() == "end")
-			                    {}
-			                    else error(17);}
+				 "begin", [&]
+				          {
+					          statement();
+					          while (lexer->next_token() == ";")
+					          {
+						          lexer->get_token();
+						          statement();
+					          }
+					          if (lexer->next_token() == "end")
+					          {}
+					          else error(17);
+				          }
 			 },
 			 {
-				 "if",[&]{condition();int jmp_pos = 0;
-				            if (lexer->next_token() == "then")
-				            {   generate_code(fct::jpc,0, 0);
-					            jmp_pos = static_cast<int>(code.size() - 1);
-					            lexer->get_token();statement();}
-				            else
-				            {error(16);}
-				            code[jmp_pos].M = static_cast<int>(code.size() - 1);
-			                if (lexer->next_token() == "else")
-			                {   lexer->get_token();
-				                statement();}}
+				 "if",[&]
+				      {
+					      condition();
+					      int cond_false_jmp = 0;
+					      int if_finish_jmp = 0;
+					      if (lexer->next_token() == "then")
+					      {
+						      generate_code(fct::jpc, 0, 0);
+						      cond_false_jmp = static_cast<int>(code.size() - 1);
+						      lexer->get_token();
+						      statement();
+						      generate_code(fct::jmp, 0, 0);
+						      if_finish_jmp = static_cast<int>(code.size() - 1);
+					      } else
+					      {
+						      error(16);
+					      }
+					      if (lexer->next_token() == "else")
+					      {
+						      lexer->get_token();
+						      code[cond_false_jmp].M = static_cast<int>(code.size() - 1);
+						      statement();
+					      }
+					      code[if_finish_jmp].M = static_cast<int>(code.size());
+				      }
 			 },
 			 {
-				 "while", [&]{condition();
-				                if (lexer->next_token() == "do")
-				                {statement();}
-			                    else error(18);}
+				 "while", [&]
+				          {
+					          condition();
+					          generate_code(fct::jpc, 0, 0);
+					          int first_jmp = static_cast<int>(code.size() - 1);
+					          if (lexer->next_token() == "do")
+					          {
+						          statement();
+					          } else
+					          {
+						          error(18);
+					          }
+					          generate_code(fct::jmp, 0, first_jmp);
+					          code[first_jmp].M = static_cast<int>(code.size());
+				          }
+				          
 			 },
 			 {
-				 "read", [&]{generate_code(fct::sio, 0, 2);}
+				 "read", [&]
+				         {
+					         generate_code(fct::sio, 0, 2);
+					         Symbol* variable = local_space->get(lexer->get_token());
+					         if (variable not_eq nullptr)
+					         {
+						         generate_code(fct::sto, variable->level, variable->addr);
+					         }else
+					         {
+						         error(11);
+					         }
+				         }
 			 },
 			 {
-				 "write", [&]{ expression();
-				                generate_code(fct::sio, 0, 1);}
+				 "write", [&]
+				          {
+					          expression();
+					          generate_code(fct::sio, 0, 1);
+				          }
 			 },
-		 });
+		});
 	
 	if (oper_table.find(lexer->next_token()) not_eq oper_table.end())
 	{
