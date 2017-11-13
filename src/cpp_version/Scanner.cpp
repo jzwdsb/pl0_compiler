@@ -32,6 +32,7 @@ void Scanner::prepare()
 	if (it == buffer.end() and not file.eof())
 	{
 		getline(file, buffer);
+		buffer.push_back('\n');
 		it = buffer.begin();
 	}
 }
