@@ -19,7 +19,7 @@ public:
 private:
 	void prepare();
 	Scanner* scanner;
-	std::deque<std::string>token_table;
+	std::deque<std::string> token_table;
 };
 
 

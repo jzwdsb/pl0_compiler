@@ -4,8 +4,6 @@
 
 #include "Lexer.h"
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
 #include <regex>
 
 
@@ -33,7 +31,7 @@ const std::string & Lexer::next_token()
 }
 
 
-#define  jump_blank()   while (isblank(ch)) ch = scanner->readChar()
+#define  jump_blank()   while (isblank(ch) and ch not_eq '\n') ch = scanner->readChar()
 
 void Lexer::prepare()
 {
@@ -59,7 +57,7 @@ void Lexer::prepare()
 				{
 					curr_word.push_back(ch);
 					ch = scanner->readChar();
-				}while (isalpha(ch) or isdigit(ch) or ch == '_');
+				}while (isalpha(ch) or isdigit(ch) or ch == '_' and not scanner->isEof());
 				token_table.push_back(std::move(curr_word));
 				curr_word.clear();
 			}
@@ -76,6 +74,10 @@ void Lexer::prepare()
 				}while (isdigit(ch));
 				token_table.push_back(curr_word);
 				curr_word.clear();
+				if(not isblank(ch))
+				{
+					error(19);
+				}
 			}
 			
 			
@@ -87,7 +89,7 @@ void Lexer::prepare()
 				{
 					curr_word.push_back(ch);
 					ch = scanner->readChar();
-				}while (operator_string.find(ch) not_eq std::string::npos);
+				}while (operator_string.find(ch) not_eq std::string::npos and not scanner->isEof());
 				token_table.push_back(curr_word);
 				curr_word.clear();
 			}
@@ -100,7 +102,7 @@ void Lexer::prepare()
 				{
 					curr_word.push_back(ch);
 					ch = scanner->readChar();
-				}while (delimiter_string.find(ch) not_eq std::string::npos);
+				}while (delimiter_string.find(ch) not_eq std::string::npos and not scanner->isEof());
 				token_table.push_back(curr_word);
 				curr_word.clear();
 			}
