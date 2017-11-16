@@ -3,13 +3,11 @@
 //
 
 #include "Lexer.h"
-#include <boost/algorithm/string.hpp>
-#include <regex>
 
 
 Lexer::Lexer(Scanner* scer):scanner(scer),token_table()
 {
-
+	prepare();
 }
 
 /** 该函数取出下一个词素并返回*/
@@ -17,8 +15,11 @@ std::string Lexer::get_token()
 {
 	prepare();
 	std::string curr_token;
-	curr_token = token_table.front();
-	token_table.pop_front();
+	if (not scanner->isEof())
+	{
+		curr_token = token_table.front();
+		token_table.pop();
+	}
 	
 	return curr_token;
 }
@@ -35,7 +36,7 @@ const std::string & Lexer::next_token()
 
 void Lexer::prepare()
 {
-	if (token_table.empty() and not scanner->isEof())
+	while (token_table.empty() and not scanner->isEof())
 	{
 		char ch = 0;
 		std::string curr_word;
@@ -53,13 +54,13 @@ void Lexer::prepare()
 			// 遇到以字母或下划线开头的单词
 			if (isalpha(ch) or ch == '_')
 			{
+				curr_word.clear();
 				do
 				{
 					curr_word.push_back(ch);
 					ch = scanner->readChar();
-				}while (isalpha(ch) or isdigit(ch) or ch == '_' and not scanner->isEof());
-				token_table.push_back(std::move(curr_word));
-				curr_word.clear();
+				}while ((isalpha(ch) or isdigit(ch) or ch == '_') and not scanner->isEof());
+				token_table.push(std::move(curr_word));
 			}
 			
 			
@@ -67,14 +68,14 @@ void Lexer::prepare()
 			jump_blank();
 			if (isdigit(ch))
 			{
+				curr_word.clear();
 				do
 				{
 					curr_word.push_back(ch);
 					ch = scanner->readChar();
-				}while (isdigit(ch));
-				token_table.push_back(curr_word);
-				curr_word.clear();
-				if(not isblank(ch))
+				}while (isdigit(ch) and not scanner->isEof());
+				token_table.push(std::move(curr_word));
+				if(not isblank(ch) and delimiter_string.find(ch) == std::string::npos)
 				{
 					error(19);
 				}
@@ -85,26 +86,26 @@ void Lexer::prepare()
 			jump_blank();
 			if (operator_string.find(ch) not_eq std::string::npos)
 			{
+				curr_word.clear();
 				do
 				{
 					curr_word.push_back(ch);
 					ch = scanner->readChar();
 				}while (operator_string.find(ch) not_eq std::string::npos and not scanner->isEof());
-				token_table.push_back(curr_word);
-				curr_word.clear();
+				token_table.push(std::move(curr_word));
 			}
 			
 			//匹配分隔符
 			jump_blank();
 			if (delimiter_string.find(ch) not_eq std::string::npos)
 			{
+				curr_word.clear();
 				do
 				{
 					curr_word.push_back(ch);
 					ch = scanner->readChar();
 				}while (delimiter_string.find(ch) not_eq std::string::npos and not scanner->isEof());
-				token_table.push_back(curr_word);
-				curr_word.clear();
+				token_table.push(std::move(curr_word));
 			}
 		}
 		/*
@@ -128,6 +129,11 @@ void Lexer::prepare()
 		delete current_line;
 		*/
 	}
+}
+
+bool Lexer::isEof()
+{
+	return scanner->isEof();
 }
 
 #undef jump_blank

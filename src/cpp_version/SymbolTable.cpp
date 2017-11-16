@@ -3,7 +3,7 @@
 //
 
 #include "SymbolTable.h"
-SymbolTable::SymbolTable(SymbolTable *prev = nullptr):table(), prev(prev)
+SymbolTable::SymbolTable(SymbolTable *prev):table(), prev(prev)
 {
 	if (prev not_eq nullptr)
 	{

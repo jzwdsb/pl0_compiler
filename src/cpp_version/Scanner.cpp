@@ -4,9 +4,9 @@
 
 #include "Scanner.h"
 
-Scanner::Scanner(const std::string &path):it(nullptr), file(path)
+Scanner::Scanner(const std::string &path):buffer(),it(buffer.end()), file(path, std::fstream::in)
 {
-
+	prepare();
 }
 
 Scanner::~Scanner()

@@ -9,8 +9,6 @@
 #include <unordered_set>
 #include <unordered_map>
 
-#include "SymbolTable.h"
-
 
 enum object
 {
@@ -36,25 +34,26 @@ enum fct
 /** 类P Code 指令类型， 包含三个字段，指令OP, 层差L, 和另一个操作数M*/
 struct instruction
 {
-	enum fct OP;
+	fct OP;
 	int L;
 	int M;
-	instruction():OP(0),L(0),M(0){}
+	instruction() = default;
+	instruction(fct op, int l, int m):OP(op), L(l), M(m){}
 };
 
 struct Symbol
 {
-	
+public:
 	std::string name;
-	enum object type;
+	object type;
 	int value;          // only used by constant
 	int level;          // layer, used by variable, array, procedure
 	int addr;           // address, used by procedure
 	int size;           // size, used by procedure
-	Symbol():name(), type(0), value(0), level(0), addr(0),size(0){};
+	Symbol() = default;
 	Symbol(const Symbol&) = default;
 	Symbol(const std::string& name):
-		name(name),type(0),value(0), level(0),addr(0), size(0){};
+		name(name),type(object::array),value(0), level(0),addr(0), size(0){};
 };
 
 
@@ -69,7 +68,7 @@ extern std::unordered_set<std::string> rel_op;
 /** 为了方便而声明的分隔符字符串，包含所有分割符用到的字符 */
 extern std::string delimiter_string;
 
-extern std::array<std::string, 32> err_msg;
+extern std::array<std::string, 33> err_msg;
 
 
 

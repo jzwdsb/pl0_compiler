@@ -4,9 +4,9 @@
 
 #ifndef CPP_VERSION_SYMBOLTABLE_H
 #define CPP_VERSION_SYMBOLTABLE_H
-#include <unordered_set>
-#include <bits/unordered_map.h>
+#include <unordered_map>
 #include "pl0.h"
+
 
 class SymbolTable
 {

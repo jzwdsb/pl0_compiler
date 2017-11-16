@@ -15,11 +15,12 @@ public:
 	explicit Lexer(Scanner* scer);
 	std::string get_token();
 	const std::string & next_token();
-	
+	bool isEof();
+	virtual ~Lexer() = default;
 private:
 	void prepare();
 	Scanner* scanner;
-	std::deque<std::string> token_table;
+	std::queue<std::string> token_table;
 };
 
 

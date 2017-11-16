@@ -19,8 +19,8 @@ public:
 	
 private:
 	void prepare();
-	std::string ::iterator it;
 	std::string buffer;
+	std::string ::iterator it;
 	std::fstream file;
 };
 

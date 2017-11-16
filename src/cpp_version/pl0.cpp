@@ -5,6 +5,7 @@
 #include <iostream>
 #include <boost/lexical_cast.hpp>
 #include "pl0.h"
+#include "SymbolTable.h"
 #include "Scanner.h"
 #include "Lexer.h"
 
@@ -29,8 +30,8 @@ std::vector<int> runtime_stack;
 std::vector<int> call_stack;
 
 /**	定义全局词法分析器*/
-Scanner *scanner = new Scanner("../../demo.pl0");
-Lexer   *lexer   = new Lexer(scanner);
+extern Scanner *scanner ;
+extern Lexer   *lexer   ;
 
 std::unordered_set<std::string> key_word_set
 	({
@@ -75,7 +76,7 @@ std::unordered_set<std::string> delimiter_set
 		",", ";","."
 	 });
 
-std::array<std::string, 32> err_msg =
+std::array<std::string, 33> err_msg
 	{
 		/*  0*/      "",
 		/*  1*/      "Found ':=' when expecting '='",
@@ -125,7 +126,7 @@ std::vector<instruction> code;
 std::unordered_map<int, std::unordered_map<int, int>> local_variable;
 
 __always_inline
-void generate_code(int OP, int L, int M)
+void generate_code(fct OP, int L, int M)
 {
 	code.emplace_back(OP, L, M);
 }
@@ -179,7 +180,7 @@ void const_declaration()
 				if (curr_token == "=")
 				{
 					curr_token = lexer->get_token();
-					curr_sym.value = boost::lexical_cast<int>(curr_sym);
+					curr_sym.value = boost::lexical_cast<int>(curr_token);
 					local_space->add(curr_sym);
 					
 				} else
@@ -205,7 +206,7 @@ void const_declaration()
 						if (curr_token == "=")
 						{
 							curr_token = lexer->get_token();
-							curr_sym.value = boost::lexical_cast<int>(curr_sym);
+							curr_sym.value = boost::lexical_cast<int>(curr_token);
 							local_space->add(curr_sym);
 							
 						} else
