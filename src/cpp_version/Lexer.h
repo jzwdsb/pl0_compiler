@@ -8,7 +8,6 @@
 #include <queue>
 #include "pl0.h"
 #include "Scanner.h"
-#include <deque>
 class Lexer
 {
 public:

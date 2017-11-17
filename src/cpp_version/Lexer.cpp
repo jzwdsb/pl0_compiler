@@ -4,6 +4,15 @@
 
 #include "Lexer.h"
 
+/**
+ * 为了方便而声明的操作符字符串，同时也是为了以后的词法分析方便扩展
+ * 包含所有操作符所使用的字符
+ */
+const std::string operator_string("+-*/%:=<>()");
+
+
+/** 为了方便而声明的分隔符字符串，包含所有分割符用到的字符*/
+const std::string delimiter_string(",;.");
 
 Lexer::Lexer(Scanner* scer):scanner(scer),token_table()
 {
