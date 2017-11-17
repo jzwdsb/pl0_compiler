@@ -57,37 +57,22 @@ public:
 };
 
 
-
-/**
- * 为了方便而声明的操作符字符串，同时也是为了以后的词法分析方便扩展
- * 包含所有操作符所使用的字符 */
-extern std::string operator_string;
-extern std::unordered_set<std::string> rel_op;
-
-
-/** 为了方便而声明的分隔符字符串，包含所有分割符用到的字符 */
-extern std::string delimiter_string;
-
-extern std::array<std::string, 33> err_msg;
-
-
-
-void generate_code(int, int, int);
+extern void generate_code(fct, int, int);
 /** 以下函数若匹配成功则生成相应的 类P code代码，
  * 通过向前查看一个移进符号选择移进规则
  * 错误处理通过 error 输出错误信息后 exit(-1) 直接退出*/
 
-void program();
-void block();
-void const_declaration();
-void var_declaration();
-void procedure_declaration();
-void statement();
-void condition();
-void expression();
-void term();
-void factor();
-void error(int err_code);
+extern void program();
+extern void block();
+extern void const_declaration();
+extern void var_declaration();
+extern void procedure_declaration();
+extern void statement();
+extern void condition();
+extern void expression();
+extern void term();
+extern void factor();
+extern void error(int err_code);
 
 /**	解释器*/
 void interpret();
