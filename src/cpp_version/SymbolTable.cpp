@@ -16,13 +16,13 @@ SymbolTable::SymbolTable(SymbolTable *prev):table(), prev(prev)
 }
 SymbolTable &SymbolTable::add(const Symbol & item)
 {
-	if (this->table.find(item.name) not_eq this->table.end())
+	if (this->table.find(item.name) == this->table.end())
 	{
 		this->table[item.name] = item;
 	}
 	else
 	{
-		error(11);
+		error(19);
 	}
 	return *this;
 }
