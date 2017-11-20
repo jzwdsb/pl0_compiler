@@ -14,5 +14,6 @@ std::unique_ptr<Lexer>   lexer ( new Lexer(scanner.get()));
 /**	主程序的入口*/
 int main ()
 {
-	var_declaration();
+	program();
+	show_code();
 }
