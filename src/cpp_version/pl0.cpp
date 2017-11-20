@@ -4,10 +4,14 @@
 
 #include <iostream>
 #include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
 #include "pl0.h"
 #include "SymbolTable.h"
 #include "Scanner.h"
 #include "Lexer.h"
+
+
+
 
 
 /**	定义全局词法分析器*/
@@ -15,7 +19,7 @@ extern std::unique_ptr<Scanner> scanner ;
 extern std::unique_ptr<Lexer>   lexer   ;
 
 const std::unordered_set<std::string> key_word_set
-	({
+	{
 	    "begin",
 	    "end",
 	    "if",
@@ -34,15 +38,27 @@ const std::unordered_set<std::string> key_word_set
 	    "odd",
 	    "procedure",
 	    "until"
-	 });
+	 };
 
 
 const std::unordered_set<std::string> rel_op
-	({
+	{
 		"=","<>", "<", "<=", ">", ">="
-	 });
-	
+	 };
 
+
+const std::array<std::string, 9> OP_STR =
+	{
+		"lit",
+		"opr",
+		"lod",
+		"sto",
+		"cal",
+		"inc",
+		"jmp",
+		"jpc",
+		"sio"
+	};
 
 const std::array<std::string, 33> err_msg
 	{
@@ -236,7 +252,7 @@ void var_declaration()
 					{
 						lexer->get_token();
 						curr_token = lexer->get_token();
-						if (isalpha(curr_token[0] or curr_token[0] == '_'))
+						if (isalpha(curr_token[0]) or curr_token[0] == '_')
 						{
 							curr_sym.name = curr_token;
 							curr_sym.level = local_space->get_level();
@@ -382,6 +398,7 @@ void statement()
 					          int first_jmp = static_cast<int>(code.size() - 1);
 					          if (lexer->next_token() == "do")
 					          {
+						          lexer->get_token();
 						          statement();
 					          } else
 					          {
@@ -572,6 +589,10 @@ void term()
 __always_inline
 bool isnum(const std::string& str)
 {
+	if (str.length() == 0)
+	{
+		return false;
+	}
 	for (auto ch : str)
 	{
 		if (not isdigit(ch))
@@ -586,6 +607,8 @@ void factor()
 {
 	std::string curr_token;
 	Symbol* symbol = nullptr;
+	
+	curr_token = lexer->get_token();
 	if (curr_token == "(")
 	{
 		curr_token = lexer->get_token();
@@ -636,3 +659,18 @@ void error(int index)
 	exit(-1);
 }
 
+std::vector<std::string> code_to_str()
+{
+	std::vector<std::string> code_str;
+	std::for_each(code.begin(), code.end(),
+		          [&](instruction ir)
+		          {code_str.emplace_back((boost::format("%1% %2% %3%") %OP_STR[ir.OP] %ir.L % ir.M).str());});
+	return code_str;
+}
+
+void show_code()
+{
+	std::vector<std::string> code_str = code_to_str();
+	std::for_each(code_str.begin(), code_str.end(),
+	              [](std::string p_code){std::cout<<p_code<<std::endl;});
+}

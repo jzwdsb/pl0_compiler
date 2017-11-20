@@ -9,7 +9,7 @@
 #include <unordered_set>
 #include <unordered_map>
 
-
+/** 标识符类型*/
 enum object
 {
 	constant,
@@ -18,6 +18,7 @@ enum object
 	procedure
 };
 
+/** 类　P code 指令集*/
 enum fct
 {
 	lit,
@@ -38,9 +39,12 @@ struct instruction
 	int L;
 	int M;
 	instruction() = default;
+	instruction(const instruction&) = default;
 	instruction(fct op, int l, int m):OP(op), L(l), M(m){}
 };
 
+
+/** pl0　的符号定义*/
 struct Symbol
 {
 public:
@@ -55,7 +59,6 @@ public:
 	Symbol(const std::string& name):
 		name(name),type(object::array),value(0), level(0),addr(0), size(0){};
 };
-
 
 extern void generate_code(fct, int, int);
 /** 以下函数若匹配成功则生成相应的 类P code代码，
@@ -73,7 +76,8 @@ extern void expression();
 extern void term();
 extern void factor();
 extern void error(int err_code);
-
+extern std::vector<std::string> code_to_str();
+extern void show_code();
 /**	解释器*/
 void interpret();
 #endif //CPP_VERSION_PL0_H
