@@ -29,9 +29,6 @@ std::vector<int> call_stack;
 /** 生成的类P Code 代码表, 对应于程序的text(正文段)*/
 extern std::vector<instruction> code;
 
-/** 对应于每个 procedure 的局部变量*/
-extern std::unordered_map<int, std::unordered_map<int, int>> local_variable;
-
 #define stack_operate(OP)   runtime_stack[ESP - 1] = runtime_stack[ESP - 1] OP runtime_stack[ESP]
 
 void interpret()
