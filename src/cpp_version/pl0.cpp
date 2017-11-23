@@ -133,10 +133,10 @@ void block()
 {
 	SymbolTable* prev = local_space;
 	local_space = new SymbolTable(prev);
-	auto pos = code.size();
-	generate_code(fct::jmp, 0, 0);
 	const_declaration();
 	var_declaration();
+	auto pos = code.size();
+	generate_code(fct::jmp, 0, 0);
 	procedure_declaration();
 	code[pos].M = static_cast<int>(code.size());
 	statement();
@@ -307,6 +307,7 @@ void procedure_declaration()
 					{
 						curr_token = lexer->get_token();
 						block();
+						std::string tmp = lexer->next_token();
 						if (lexer->next_token() == ";")
 						{
 							curr_token = lexer->get_token();
@@ -335,7 +336,7 @@ void statement()
 	std::string curr_token;
 	/**	为了避免在if else 选择分支的时间开销，选择使用 hash 散列法将移进符号映射到操作*/
 	static std::unordered_map<std::string, std::function<void()>> oper_table
-		({
+		{
 			 {
 				"call", [&]
 				        {
@@ -355,11 +356,16 @@ void statement()
 					          statement();
 					          while (lexer->next_token() == ";")
 					          {
+						          /** cost ;*/
 						          lexer->get_token();
 						          statement();
 					          }
 					          if (lexer->next_token() == "end")
-					          {}
+					          {
+						          /** cost end*/
+						          lexer->get_token();
+						          return ;
+					          }
 					          else error(17);
 				          }
 			 },
@@ -430,14 +436,14 @@ void statement()
 					          generate_code(fct::sio, 0, 1);
 				          }
 			 },
-		});
+		};
 	
 	if (oper_table.find(lexer->next_token()) not_eq oper_table.end())
 	{
 		curr_token = lexer->get_token();
 		oper_table[curr_token]();
 	}
-	else if (local_space->get(lexer->next_token()) not_eq nullptr)
+ 	else if (local_space->get(lexer->next_token()) not_eq nullptr)
 	{
 		// 获取标志符
 		curr_token = lexer->get_token();
@@ -446,19 +452,16 @@ void statement()
 		
 		if (lexer->next_token() == ":=")
 		{
-			curr_token = lexer->get_token();
-			expression();
-			generate_code(fct::sto, ident->level, ident->addr);
+ 			curr_token = lexer->get_token();
+ 			expression();
+ 			generate_code(fct::sto, local_space->get_level() - ident->level, ident->addr);
 		}
 		else
 		{
 			error(13);
 		}
 	}
-	else
-	{
-		expression();
-	}
+	/** statement 可以直接推导为空串，　到这直接退出即可*/
 }
 
 void condition()
@@ -542,8 +545,7 @@ void expression()
 	else
 	{
 		term();
-		curr_token = lexer->next_token();
-		while (curr_token == "+" or curr_token == "-")
+		while (lexer->next_token() == "+" or lexer->next_token() == "-")
 		{
 			curr_token = lexer->get_token();
 			term();
@@ -671,6 +673,11 @@ std::vector<std::string> code_to_str()
 void show_code()
 {
 	std::vector<std::string> code_str = code_to_str();
+	int code_line = 0;
 	std::for_each(code_str.begin(), code_str.end(),
-	              [](std::string p_code){std::cout<<p_code<<std::endl;});
+	              [&](std::string p_code)
+	              {
+		              std::cout<<code_line << ':' <<p_code<<std::endl;
+		              ++code_line;
+	              });
 }
