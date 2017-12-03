@@ -23,29 +23,33 @@ instruction IR;
 /** 运行时栈，用来存储过程所需局部变量*/
 std::array<int, 1024> runtime_stack;
 
-/** 运行时程序调用栈，用来存储过程跳转时的上下文*/
-std::vector<int> call_stack;
-
 /** 生成的类P Code 代码表, 对应于程序的text(正文段)*/
 extern std::vector<instruction> code;
 
 #define stack_operate(OP)   runtime_stack[ESP - 1] = runtime_stack[ESP - 1] OP runtime_stack[ESP]
-
+/** 对　PC　更新操作作如下约定
+ * 		１　顺序执行， PC每取一条指令自动加１，自增过程发生在取指令操作之后
+ * 		２　跳转操作， 当发生跳转指令时，约定指令所指示的位置即为新的PC值(此点有编译器保证),
+ * 		   跳转之后直接取指令然后更新PC
+ * */
 void interpret()
 {
-	
-	
 	/**	初始化程序计数器，从翻译的 code 段起始位置计数*/
 	PC = 0;
 	
 	/** 初始化栈基寄存器和栈顶寄存器*/
-	ESP = static_cast<int>(runtime_stack.size() - 1);
+	ESP = 3;
 	EBP = 0;
 	
+	/** 初始化顶层静态链，动态链, 返回地址RA*/
+	runtime_stack[0] = 0;
+	runtime_stack[1] = 0;
+	runtime_stack[2] = 0;
 	std::cout << "=========start interpret PL/0 program==========" << std::endl;
 	do
 	{
 		IR = code[PC];
+		++PC;
 		switch (IR.OP)
 		{
 			case fct::lit :
@@ -60,16 +64,12 @@ void interpret()
 					case 0:
 						/**	opr 0 0
 						 * 		return to the caller from a procedure*/
-						PC = call_stack.back();
-						call_stack.pop_back();
-						++PC;
 						break;
 					case 1:
 						/** opr 0 1
 						 * 		Negation, pop the stack and return the negative of the value
 						 * */
 						runtime_stack[ESP] = -runtime_stack[ESP];
-						++PC;
 						break;
 					case 2:
 						/**	opr 0 2
@@ -77,7 +77,6 @@ void interpret()
 						 * */
 						stack_operate(+);
 						--ESP;
-						++PC;
 						break;
 					case 3:
 						/**	opr 0 3
@@ -85,7 +84,6 @@ void interpret()
 						 * */
 						stack_operate(-);
 						--ESP;
-						++PC;
 						break;
 					case 4:
 						/** opr 0 4
@@ -93,7 +91,6 @@ void interpret()
 						 * */
 						stack_operate(*);
 						--ESP;
-						++PC;
 						break;
 					case 5:
 						/**	opr 0 5
@@ -101,13 +98,11 @@ void interpret()
 						 * */
 						stack_operate(/);
 						--ESP;
-						++PC;
 						break;
 					case 6:
 						/**	opr 0 6
 						 * 		is it odd? pop the stack and push 1 if odd, 0 if even*/
 						runtime_stack[ESP] = runtime_stack[ESP] % 2;
-						++PC;
 						break;
 					case 7:
 						/**	opr 0 7
@@ -116,7 +111,6 @@ void interpret()
 						 * */
 						stack_operate(%);
 						--ESP;
-						++PC;
 						break;
 					case 8:
 						/** opr 0 9
@@ -124,7 +118,6 @@ void interpret()
 						 * 	 and push 1 if equal, 0 if not*/
 						stack_operate(==);
 						--ESP;
-						++PC;
 						break;
 					case 9:
 						/**	opr 0 9
@@ -132,7 +125,6 @@ void interpret()
 						 * 	 pop two values, push 0 if is equal, 1 if not*/
 						stack_operate(!=);
 						--ESP;
-						++PC;
 						break;
 					case 10:
 						/**	opr 0 10
@@ -140,7 +132,6 @@ void interpret()
 						 * 	 pop two values, push 1 if first is less then second, 0 if not*/
 						stack_operate(>);
 						--ESP;
-						++PC;
 						break;
 					case 11:
 						/**	opr 0 11
@@ -148,7 +139,6 @@ void interpret()
 						 * 	 pop two values, push 1 if first is less then  or equal second, 0 if not*/
 						stack_operate(>=);
 						--ESP;
-						++PC;
 						break;
 					case 12:
 						/** opr 0 12
@@ -156,7 +146,6 @@ void interpret()
 						 * */
 						stack_operate(<);
 						--ESP;
-						++PC;
 						break;
 					case 13:
 						/**	opr 0 13
@@ -164,7 +153,6 @@ void interpret()
 						 * */
 						stack_operate(<=);
 						--ESP;
-						++PC;
 						break;
 					default:
 						error(25);
@@ -173,20 +161,15 @@ void interpret()
 			case fct::lod :
 				 // TODO here is going to implement load variable
 				++ESP;
-				++PC;
 				break;
 			case fct::sto :
 				// TODO here is going to implement store variable
-				++PC;
 				break;
 			case fct::cal :
-				/**	将当前 PC 入栈保存调用链*/
-				call_stack.push_back(::PC);
 				::PC = IR.M;
 				break;
 			case fct::inc :
 				ESP += IR.M;
-				++PC;
 				break;
 			case fct::jmp :
 				PC = IR.M;
@@ -203,7 +186,6 @@ void interpret()
 					case 1:
 						std::cout << runtime_stack[ESP];
 						--ESP;
-						++PC;
 						break;
 					case 2:
 						int num;
