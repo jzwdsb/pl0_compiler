@@ -60,7 +60,7 @@ void Lexer::prepare()
 		while (ch not_eq '\n')
 		{
 			jump_blank();
-			// 遇到以字母或下划线开头的单词
+			/** 遇到以字母或下划线开头的单词*/
 			if (isalpha(ch) or ch == '_')
 			{
 				curr_word.clear();
@@ -73,8 +73,9 @@ void Lexer::prepare()
 			}
 			
 			
-			// 匹配数字字面量
+			
 			jump_blank();
+			/** 匹配数字字面量*/
 			if (isdigit(ch))
 			{
 				curr_word.clear();
@@ -91,8 +92,8 @@ void Lexer::prepare()
 			}
 			
 			
-			// 匹配运算符
 			jump_blank();
+			/** 匹配运算符*/
 			if (operator_string.find(ch) not_eq std::string::npos)
 			{
 				curr_word.clear();
@@ -104,8 +105,8 @@ void Lexer::prepare()
 				token_table.push(std::move(curr_word));
 			}
 			
-			//匹配分隔符
 			jump_blank();
+			/** 匹配分隔符*/
 			if (delimiter_string.find(ch) not_eq std::string::npos)
 			{
 				curr_word.clear();
