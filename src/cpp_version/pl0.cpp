@@ -5,6 +5,7 @@
 #include <iostream>
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
+#include <set>
 #include "pl0.h"
 #include "SymbolTable.h"
 #include "Scanner.h"
@@ -140,6 +141,7 @@ void block()
 	procedure_declaration();
 	code[pos].M = static_cast<int>(code.size());
 	statement();
+	generate_code(fct::opr, 0, 0);
 	delete local_space;
 	local_space = prev;
 }
@@ -231,7 +233,7 @@ void const_declaration()
 void var_declaration()
 {
 	std::string curr_token = lexer->next_token();
-	int variable_count = 3;
+	int variable_count = 0;
 	if (curr_token == "int" or curr_token == "var" )
 	{
 		lexer->get_token();
