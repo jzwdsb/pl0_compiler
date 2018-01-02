@@ -12,9 +12,6 @@
 #include "Lexer.h"
 
 
-
-
-
 /**	定义全局词法分析器*/
 extern std::unique_ptr<Scanner> scanner ;
 extern std::unique_ptr<Lexer>   lexer   ;
@@ -153,7 +150,7 @@ void const_declaration()
 	{
 		lexer->get_token();
 		curr_token = lexer->get_token();
-		if (key_word_set.find(curr_token) == key_word_set.end())
+		if (key_word_set.count(curr_token) == 0)
 		{
 			if (isalpha(curr_token[0]) or curr_token[0] == '_')
 			{
@@ -164,12 +161,12 @@ void const_declaration()
 				if (curr_token == "=")
 				{
 					curr_token = lexer->get_token();
-					/**	可能会抛出 boost::bad_lexical_cast 异常*/
+					/**	可能会抛出 std::invalid_argument 异常*/
 					try
 					{
-						curr_sym.value = boost::lexical_cast<int>(curr_token);
+						curr_sym.value = std::stoi(curr_token);
 					}
-					catch (boost::bad_lexical_cast& e)
+					catch (std::invalid_argument& e)
 					{
 						std::cerr<<e.what()<<std::endl;
 						error(2);
@@ -192,7 +189,7 @@ void const_declaration()
 			{
 				curr_token = lexer->get_token();
 				curr_token = lexer->get_token();
-				if (key_word_set.find(curr_token) == key_word_set.end())
+				if (key_word_set.count(curr_token) == 0)
 				{
 					if (isalpha(curr_token[0]) or curr_token[0] == '_')
 					{
@@ -203,7 +200,20 @@ void const_declaration()
 						if (curr_token == "=")
 						{
 							curr_token = lexer->get_token();
-							curr_sym.value = boost::lexical_cast<int>(curr_token);
+							/** 这里可能亏抛出　std::invalid_argument 异常*/
+							try
+							{
+								curr_sym.value = std::stoi(curr_token);
+							}
+							catch (std::invalid_argument& e)
+							{
+								std::cerr << e.what();
+								error(2);
+							}
+							catch (...)
+							{
+								error(2);
+							}
 							local_space->add(curr_sym);
 							
 						} else
@@ -238,7 +248,7 @@ void var_declaration()
 	{
 		lexer->get_token();
 		curr_token = lexer->get_token();
-		if (key_word_set.find(curr_token) == key_word_set.end())
+		if (key_word_set.count(curr_token) == 0)
 		{
 			if (isalpha(curr_token[0]) or curr_token[0] == '_')
 			{
@@ -298,18 +308,18 @@ void procedure_declaration()
 		{
 			lexer->get_token();
 			curr_token =  lexer->get_token();
-			if (key_word_set.find(curr_token) == key_word_set.end())
+			if (key_word_set.count(curr_token) == 0)
 			{
 				if (isalpha(curr_token[0]) or curr_token[0] == '_')
 				{
 					Symbol curr_prod(curr_token);
 					curr_prod.type = object::procedure;
 					curr_prod.addr = static_cast<int>(code.size());
+					curr_prod.level = local_space->get_level();
 					if (lexer->next_token() == ";")
 					{
 						curr_token = lexer->get_token();
 						block();
-						std::string tmp = lexer->next_token();
 						if (lexer->next_token() == ";")
 						{
 							curr_token = lexer->get_token();
@@ -440,12 +450,13 @@ void statement()
 			 },
 		};
 	
-	if (oper_table.find(lexer->next_token()) not_eq oper_table.end())
+	if (oper_table.count(curr_token) not_eq 0 )
 	{
 		curr_token = lexer->get_token();
 		oper_table[curr_token]();
+		return ;
 	}
- 	else if (local_space->get(lexer->next_token()) not_eq nullptr)
+ 	if (local_space->get(lexer->next_token()) not_eq nullptr)
 	{
 		// 获取标志符
 		curr_token = lexer->get_token();
@@ -500,7 +511,7 @@ void condition()
 	else
 	{
 		expression();
-		if (rel_op.find(lexer->next_token()) not_eq rel_op.end())
+		if (rel_op.count(lexer->next_token()) == 0)
 		{
 			curr_token = lexer->get_token();
 			expression();
@@ -622,13 +633,15 @@ void factor()
 		{
 			error(22);
 		}
+		return ;
 	}
-	else if (isnum(curr_token))
+	if (isnum(curr_token))
 	{
-		int num = boost::lexical_cast<int>(curr_token);
+		int num = std::stoi(curr_token);
 		generate_code(fct::lit, 0, num);
+		return ;
 	}
-	else if ((symbol = local_space->get(curr_token)) not_eq nullptr)
+	if ((symbol = local_space->get(curr_token)) not_eq nullptr)
 	{
 		
 		switch (symbol->type)
