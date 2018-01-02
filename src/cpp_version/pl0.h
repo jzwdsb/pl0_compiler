@@ -5,9 +5,12 @@
 #ifndef CPP_VERSION_PL0_H
 #define CPP_VERSION_PL0_H
 #include <string>
+#include <utility>
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
+
+#define NOT_INITIALIZE  0xffffffff
 
 /** 标识符类型*/
 enum object
@@ -15,7 +18,8 @@ enum object
 	constant,
 	variable,
 	array,
-	procedure
+	procedure,
+	abnormal = 0xff     /** a error code to indicate this field need to be initialized*/
 };
 
 /** 类　P code 指令集*/
@@ -47,17 +51,20 @@ struct instruction
 /** pl0　的符号定义*/
 struct Symbol
 {
+	/** here assign other member to a abnormal value such as 0xffffffff,
+	 *  so it will not hides the logic error in parsing process
+	 * */
 public:
 	std::string name;
-	object type;
-	int value;          // only used by constant
-	int level;          // layer, used by variable, array, procedure
-	int addr;           // address, used by procedure
-	int size;           // size, used by procedure
+	object type = object::abnormal;
+	int value = NOT_INITIALIZE;          /** only used by constant */
+	int level = NOT_INITIALIZE;          /** layer, used by variable, array, procedure */
+	int addr = NOT_INITIALIZE;           /** address, used by procedure */
+	int size = NOT_INITIALIZE;           /** size, used by procedure */
 	Symbol() = default;
 	Symbol(const Symbol&) = default;
-	Symbol(const std::string& name):
-		name(name),type(object::array),value(0), level(0),addr(0), size(0){};
+	explicit Symbol(std::string name):
+		name(std::move(name)){};
 };
 
 extern void generate_code(fct, int, int);
