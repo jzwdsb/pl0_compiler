@@ -10,7 +10,6 @@
  */
 const std::string operator_string("+-*/%:=<>()");
 
-
 /** 为了方便而声明的分隔符字符串，包含所有分割符用到的字符*/
 const std::string delimiter_string(",;.");
 
@@ -143,7 +142,7 @@ void Lexer::prepare()
 
 bool Lexer::isEof()
 {
-	return scanner->isEof();
+	return scanner->isEof() and this->token_table.empty();
 }
 
 #undef jump_blank
