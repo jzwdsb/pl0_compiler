@@ -26,10 +26,21 @@ std::array<int, 1024> runtime_stack;
 /** 生成的类P Code 代码表, 对应于程序的text(正文段)*/
 extern std::vector<instruction> code;
 
-#define stack_operate(OP)   runtime_stack[ESP - 1] = runtime_stack[ESP - 1] OP runtime_stack[ESP]
+/** 根据层差向前查询声明变量过程的基址*/
+int base(int l)
+{
+	int b = EBP;
+	while (l--)
+	{
+		b = runtime_stack[b];
+	}
+	return b;
+}
+
+#define stack_operate(OP)   runtime_stack[ESP - 2] = runtime_stack[ESP - 2] OP runtime_stack[ESP - 1]
 /** 对　PC　更新操作作如下约定
  * 		１　顺序执行， PC每取一条指令自动加１，自增过程发生在取指令操作之后
- * 		２　跳转操作， 当发生跳转指令时，约定指令所指示的位置即为新的PC值(此点有编译器保证),
+ * 		２　跳转操作， 当发生跳转指令时，约定指令所指示的位置即为新的PC值(此点由编译器保证),
  * 		   跳转之后直接取指令然后更新PC
  * */
 void interpret()
@@ -38,10 +49,11 @@ void interpret()
 	PC = 0;
 	
 	/** 初始化栈基寄存器和栈顶寄存器*/
-	ESP = 3;
+	ESP = 0;
 	EBP = 0;
 	
-	/** 初始化顶层静态链，动态链, 返回地址RA*/
+	/** 初始化顶层静态链，动态链, 返回地址RA
+	 *  取到顶层静态链时即程序结束*/
 	runtime_stack[0] = 0;
 	runtime_stack[1] = 0;
 	runtime_stack[2] = 0;
@@ -55,8 +67,8 @@ void interpret()
 			case fct::lit :
 				/** lit 0 M
 				 * 		push the constant value M onto the stack*/
-				++ESP;
 				runtime_stack[ESP] = IR.M;
+				++ESP;
 				break;
 			case fct::opr :
 				switch (IR.M)
@@ -64,12 +76,15 @@ void interpret()
 					case 0:
 						/**	opr 0 0
 						 * 		return to the caller from a procedure*/
+						ESP = EBP;
+						PC = runtime_stack[ESP + 2];
+						EBP = runtime_stack[ESP + 1];
 						break;
 					case 1:
 						/** opr 0 1
 						 * 		Negation, pop the stack and return the negative of the value
 						 * */
-						runtime_stack[ESP] = -runtime_stack[ESP];
+						runtime_stack[ESP - 1] = -runtime_stack[ESP - 1];
 						break;
 					case 2:
 						/**	opr 0 2
@@ -159,13 +174,18 @@ void interpret()
 				}
 				break;
 			case fct::lod :
-				 // TODO here is going to implement load variable
+				/** to load a variable, we need to find base address of the procedure which declare it
+				 *  then load it by the offset indicate by the field M*/
+				runtime_stack[ESP] = runtime_stack[base(IR.L) + IR.M];
 				++ESP;
 				break;
 			case fct::sto :
-				// TODO here is going to implement store variable
+				/** basically like the load operation*/
+				runtime_stack[base(IR.L) + IR.M] = runtime_stack[ESP - 1];
 				break;
 			case fct::cal :
+				
+				
 				::PC = IR.M;
 				break;
 			case fct::inc :
@@ -200,7 +220,7 @@ void interpret()
 				error(25);
 		}
 		
-	} while (ESP not_eq 0);
+	} while (PC not_eq 0);
 }
 
 #undef stack_operate
