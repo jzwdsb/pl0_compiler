@@ -58,7 +58,7 @@ public:
 	std::string name;
 	object type = object::abnormal;
 	int value = NOT_INITIALIZE;          /** only used by constant */
-	int level = NOT_INITIALIZE;          /** layer, used by variable, array, procedure */
+	int level = NOT_INITIALIZE;          /** level, used by variable, array, procedure */
 	int addr = NOT_INITIALIZE;           /** address, used by procedure */
 	int size = NOT_INITIALIZE;           /** size, used by procedure */
 	Symbol() = default;
@@ -76,6 +76,7 @@ extern void program();
 extern void block();
 extern void const_declaration();
 extern void var_declaration();
+extern void array_declaration();
 extern void procedure_declaration();
 extern void statement();
 extern void condition();

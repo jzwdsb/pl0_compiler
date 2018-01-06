@@ -63,7 +63,7 @@ const std::array<std::string, 33> err_msg
 		/*  0*/      "",
 		/*  1*/      "Found ':=' when expecting '='",
 		/*  2*/      "There must be a number to follow",
-		/*  3*/      "There must be an '=' to follow the identifier",
+		/*  3*/      "There must be an '=' or '[]' to follow the identifier",
 		/*  4*/      "There must be an identifier to follow 'const', 'var' or 'procedure'",
 		/*  5*/      "Missing ',' or ';'",
 		/*  6*/      "Incorrect procedure name",
@@ -95,7 +95,7 @@ const std::array<std::string, 33> err_msg
 		/* 32*/      "There are too many levels",
 	};
 
-/**	顶层命名空间*/
+/**	顶层命名空间, 好像没用到*/
 SymbolTable top;
 
 /**	当前命名空间*/
@@ -111,6 +111,22 @@ void generate_code(fct OP, int L, int M)
 	code.emplace_back(OP, L, M);
 }
 
+__always_inline
+bool isnum(const std::string& str)
+{
+	if (str.length() == 0)
+	{
+		return false;
+	}
+	for (auto ch : str)
+	{
+		if (not isdigit(ch))
+		{
+			return false;
+		}
+	}
+	return true;
+}
 
 void program()
 {
@@ -133,6 +149,7 @@ void block()
 	local_space = new SymbolTable(prev);
 	const_declaration();
 	var_declaration();
+	array_declaration();
 	auto pos = code.size();
 	generate_code(fct::jmp, 0, 0);
 	procedure_declaration();
@@ -298,6 +315,55 @@ void var_declaration()
 
 }
 
+void array_declaration()
+{
+	std::string curr_token;
+	int base_address = 0;
+	if (lexer->next_token() == "array")
+	{
+		lexer->get_token(); /** consume one token*/
+		curr_token = lexer->get_token();
+		if(key_word_set.count(curr_token) == 0)
+		{
+			if(isalpha(curr_token[0]) or curr_token[0] == '_')
+			{
+				
+				Symbol curr_symbol(curr_token);
+				curr_symbol.type = object::array;
+				curr_symbol.level = local_space->get_level();
+				curr_symbol.addr = base_address;
+				if (lexer->next_token() not_eq "[")
+				{
+					try
+					{
+						curr_symbol.size =std::stoi(lexer->get_token());
+						base_address += curr_symbol.size;
+					}
+					catch (std::invalid_argument& e)
+					{
+						std::cerr << e.what();
+						error(2);
+					}
+					catch (...)
+					{
+						error(2);
+					}
+				}else
+				{
+					error(3);
+				}
+				
+			}else
+			{
+				error(19);
+			}
+		}else
+		{
+			error(19);
+		}
+	}
+}
+
 void procedure_declaration()
 {
 	std::string curr_token;
@@ -326,6 +392,8 @@ void procedure_declaration()
 							/** 一个过程的在正文区的长度等于 结束位置 - 开始位置*/
 							curr_prod.size = static_cast<int>(code.size() - curr_prod.addr);
 							local_space->add(curr_prod);
+							/** 在　procedure 的最后加上过程返回语句*/
+							generate_code(fct::opr, 0, 0);
 						} else
 						{
 							error(17);
@@ -601,22 +669,6 @@ void term()
 	}
 }
 
-__always_inline
-bool isnum(const std::string& str)
-{
-	if (str.length() == 0)
-	{
-		return false;
-	}
-	for (auto ch : str)
-	{
-		if (not isdigit(ch))
-		{
-			return false;
-		}
-	}
-	return true;
-}
 
 void factor()
 {
@@ -643,7 +695,6 @@ void factor()
 	}
 	if ((symbol = local_space->get(curr_token)) not_eq nullptr)
 	{
-		
 		switch (symbol->type)
 		{
 			case object::constant :
