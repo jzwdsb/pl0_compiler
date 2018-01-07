@@ -16,4 +16,6 @@ int main ()
 {
 	program();
 	show_code();
+	save_code();
+	interpret();
 }
