@@ -49,7 +49,7 @@ void interpret()
 	PC = 0;
 	
 	/** 初始化栈基寄存器和栈顶寄存器*/
-	ESP = 0;
+	ESP = 3;
 	EBP = 0;
 	
 	/** 初始化顶层静态链，动态链, 返回地址RA
@@ -184,9 +184,17 @@ void interpret()
 				runtime_stack[base(IR.L) + IR.M] = runtime_stack[ESP - 1];
 				break;
 			case fct::cal :
+				/** Initialize static link, search backward to find it's direct external procedure*/
+				/** static link is also called access link, use to load variables*/
+				runtime_stack[ESP] = base(IR.L);
 				
-				
-				::PC = IR.M;
+				/** Initialize dynamic link, just push the EBP into the stack*/
+				/** dynamic link is also called control link, used when the procedure returns*/
+				runtime_stack[ESP + 1] = EBP;
+				runtime_stack[ESP + 2] = PC;
+				EBP = ESP;
+				ESP += 3;
+				PC = IR.M;
 				break;
 			case fct::inc :
 				ESP += IR.M;
@@ -195,7 +203,7 @@ void interpret()
 				PC = IR.M;
 				break;
 			case fct::jpc :
-				if (runtime_stack[ESP] == 0)
+				if (runtime_stack[ESP - 1] == 0)
 				{
 					PC = IR.M;
 				}
@@ -204,13 +212,12 @@ void interpret()
 				switch (IR.M)
 				{
 					case 1:
-						std::cout << runtime_stack[ESP];
+						std::cout << runtime_stack[ESP - 1];
 						--ESP;
 						break;
 					case 2:
-						int num;
-						std::cin >> num;
-						runtime_stack[++ESP] = num;
+						std::cin >> runtime_stack[ESP];
+						++ESP;
 						break;
 					default:
 						error(25);
