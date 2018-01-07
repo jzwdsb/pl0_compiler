@@ -5,7 +5,6 @@
 #ifndef CPP_VERSION_PL0_H
 #define CPP_VERSION_PL0_H
 #include <string>
-#include <utility>
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
@@ -33,15 +32,16 @@ enum fct
 	inc,
 	jmp,
 	jpc,
-	sio
+	sio,
+	err = 0xff
 };
 
 /** 类P Code 指令类型， 包含三个字段，指令OP, 层差L, 和另一个操作数M*/
 struct instruction
 {
-	fct OP;
-	int L;
-	int M;
+	fct OP = fct::err;
+	int L = NOT_INITIALIZE;
+	int M = NOT_INITIALIZE;
 	instruction() = default;
 	instruction(const instruction&) = default;
 	instruction(fct op, int l, int m):OP(op), L(l), M(m){}
@@ -86,6 +86,7 @@ extern void factor();
 extern void error(int err_code);
 extern std::vector<std::string> code_to_str();
 extern void show_code();
+extern void save_code();
 /**	解释器*/
 void interpret();
 #endif //CPP_VERSION_PL0_H

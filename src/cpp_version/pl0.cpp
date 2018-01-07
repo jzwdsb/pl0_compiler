@@ -3,14 +3,13 @@
 //
 
 #include <iostream>
-#include <boost/lexical_cast.hpp>
+#include <fstream>
 #include <boost/format.hpp>
 #include <set>
 #include "pl0.h"
 #include "SymbolTable.h"
 #include "Scanner.h"
 #include "Lexer.h"
-
 
 /**	定义全局词法分析器*/
 extern std::unique_ptr<Scanner> scanner ;
@@ -86,7 +85,7 @@ const std::array<std::string, 33> err_msg
 		/* 23*/      "The symbol can not be followed by an factor",
 		/* 24*/      "The symbol can not be as the beginning of an expression",
 		/* 25*/      "Invalid Instruction",
-		/* 26*/      "",
+		/* 26*/      "Missing ']' after the array declaration",
 		/* 27*/      "",
 		/* 28*/      "",
 		/* 29*/      "",
@@ -166,153 +165,94 @@ void const_declaration()
 	if (lexer->next_token() == "const")
 	{
 		lexer->get_token();
-		curr_token = lexer->get_token();
-		if (key_word_set.count(curr_token) == 0)
+		do
 		{
-			if (isalpha(curr_token[0]) or curr_token[0] == '_')
+			curr_token = lexer->get_token();
+			if (key_word_set.count(curr_token) == 0)
 			{
-				Symbol curr_sym(curr_token);
-				curr_sym.type = object::constant;
-				curr_sym.level = local_space->get_level();
-				curr_token = lexer->get_token();
-				if (curr_token == "=")
+				if (isalpha(curr_token[0]) or curr_token[0] == '_')
 				{
+					Symbol curr_sym(curr_token);
+					curr_sym.type = object::constant;
+					curr_sym.level = local_space->get_level();
 					curr_token = lexer->get_token();
-					/**	可能会抛出 std::invalid_argument 异常*/
-					try
+					if (curr_token == "=")
 					{
-						curr_sym.value = std::stoi(curr_token);
-					}
-					catch (std::invalid_argument& e)
-					{
-						std::cerr<<e.what()<<std::endl;
-						error(2);
-					}
-					catch (...)
-					{
-						error(2);
-					}
-					local_space->add(curr_sym);
-					
-				} else
-				{
-					error(3);
-				}
-			} else
-			{
-				error(19);
-			}
-			while (lexer->next_token() == ",")
-			{
-				curr_token = lexer->get_token();
-				curr_token = lexer->get_token();
-				if (key_word_set.count(curr_token) == 0)
-				{
-					if (isalpha(curr_token[0]) or curr_token[0] == '_')
-					{
-						Symbol curr_sym(curr_token);
-						curr_sym.type = object::constant;
-						curr_sym.level = local_space->get_level();
 						curr_token = lexer->get_token();
-						if (curr_token == "=")
+						/**	可能会抛出 std::invalid_argument 异常*/
+						try
 						{
-							curr_token = lexer->get_token();
-							/** 这里可能亏抛出　std::invalid_argument 异常*/
-							try
-							{
-								curr_sym.value = std::stoi(curr_token);
-							}
-							catch (std::invalid_argument& e)
-							{
-								std::cerr << e.what();
-								error(2);
-							}
-							catch (...)
-							{
-								error(2);
-							}
-							local_space->add(curr_sym);
-							
-						} else
-						{
-							error(3);
+							curr_sym.value = std::stoi(curr_token);
 						}
+						catch (std::invalid_argument &e)
+						{
+							std::cerr << e.what() << std::endl;
+							error(2);
+						}
+						catch (...)
+						{
+							error(2);
+						}
+						local_space->add(curr_sym);
 					} else
 					{
-						error(19);
+						error(3);
 					}
-				}
-				if (lexer->next_token() == ";")
-				{
-					curr_token = lexer->get_token();
 				} else
 				{
-					error(17);
+					error(19);
 				}
 			}
+		}while (lexer->next_token() == "," and lexer->get_token() == ",");
+		if (lexer->next_token() == ";")
+		{
 		}else
 		{
-			error(19);
+			error(5);
 		}
 	}
 }
 
 void var_declaration()
 {
-	std::string curr_token = lexer->next_token();
+	std::string curr_token ;
 	int variable_count = 0;
-	if (curr_token == "int" or curr_token == "var" )
+	int offset = 3;
+	if (lexer->next_token() == "int" or lexer->next_token() == "var")
 	{
 		lexer->get_token();
-		curr_token = lexer->get_token();
-		if (key_word_set.count(curr_token) == 0)
+		do
 		{
-			if (isalpha(curr_token[0]) or curr_token[0] == '_')
+			curr_token = lexer->get_token();
+			if (key_word_set.count(curr_token) == 0)
 			{
-				Symbol curr_sym(curr_token);
-				curr_sym.level = local_space->get_level();
-				curr_sym.type = object::variable;
-				curr_sym.addr = variable_count;
-				local_space->add(curr_sym);
-				++variable_count;
-				if (lexer->next_token() == ",")
+				if (isalpha(curr_token[0]) or curr_token[0] == '_')
 				{
-					do
-					{
-						lexer->get_token();
-						curr_token = lexer->get_token();
-						if (isalpha(curr_token[0]) or curr_token[0] == '_')
-						{
-							curr_sym.name = curr_token;
-							curr_sym.level = local_space->get_level();
-							curr_sym.type = object::variable;
-							curr_sym.addr = variable_count;
-							local_space->add(curr_sym);
-							++variable_count;
-						}else
-						{
-							error(19);
-						}
-					} while (lexer->next_token() == ",");
-					if (lexer->next_token() == ";")
-					{
-						lexer->get_token();
-					} else
-					{
-						error(17);
-					}
+					Symbol curr_sym(curr_token);
+					curr_sym.level = local_space->get_level();
+					curr_sym.type = object::variable;
+					curr_sym.addr = offset;
+					local_space->add(curr_sym);
+					++variable_count;
+					++offset;
+				} else
+				{
+					error(19);
 				}
-			}else
+			} else
 			{
 				error(19);
 			}
-		}else
+		} while (lexer->next_token() == "," and lexer->get_token() == ",");
+		if (lexer->next_token() == ";")
 		{
-			error(19);
+			lexer->get_token(); /** consume ';' token*/
+		} else
+		{
+			error(5);
 		}
 		generate_code(fct::inc, 0, variable_count);
 	}
-
 }
 
 void array_declaration()
@@ -323,43 +263,60 @@ void array_declaration()
 	{
 		lexer->get_token(); /** consume one token*/
 		curr_token = lexer->get_token();
-		if(key_word_set.count(curr_token) == 0)
+		do
 		{
-			if(isalpha(curr_token[0]) or curr_token[0] == '_')
+			if (key_word_set.count(curr_token) == 0)
 			{
-				
-				Symbol curr_symbol(curr_token);
-				curr_symbol.type = object::array;
-				curr_symbol.level = local_space->get_level();
-				curr_symbol.addr = base_address;
-				if (lexer->next_token() not_eq "[")
+				if (isalpha(curr_token[0]) or curr_token[0] == '_')
 				{
-					try
+					
+					Symbol curr_symbol(curr_token);
+					curr_symbol.type = object::array;
+					curr_symbol.level = local_space->get_level();
+					curr_symbol.addr = base_address;
+					if (lexer->next_token() not_eq "[")
 					{
-						curr_symbol.size =std::stoi(lexer->get_token());
+						try
+						{
+							curr_symbol.size = std::stoi(lexer->get_token());
+						}
+						catch (std::invalid_argument &e)
+						{
+							std::cerr << e.what();
+							error(2);
+						}
+						catch (...)
+						{
+							error(2);
+						}
 						base_address += curr_symbol.size;
-					}
-					catch (std::invalid_argument& e)
+						if (lexer->next_token() not_eq "]")
+						{
+						
+						} else
+						{
+							error(26);
+						}
+					} else
 					{
-						std::cerr << e.what();
-						error(2);
+						error(3);
 					}
-					catch (...)
-					{
-						error(2);
-					}
-				}else
+					
+				} else
 				{
-					error(3);
+					error(19);
 				}
-				
-			}else
+			} else
 			{
 				error(19);
 			}
-		}else
+		} while (lexer->next_token() == "," and lexer->get_token() == ",");
+		if (lexer->next_token() == ";")
 		{
-			error(19);
+			lexer->get_token();
+		} else
+		{
+			error(5);
 		}
 	}
 }
@@ -369,10 +326,9 @@ void procedure_declaration()
 	std::string curr_token;
 	if (lexer->next_token() == "procedure")
 	{
-		
+		lexer->get_token();
 		do
 		{
-			lexer->get_token();
 			curr_token =  lexer->get_token();
 			if (key_word_set.count(curr_token) == 0)
 			{
@@ -392,8 +348,6 @@ void procedure_declaration()
 							/** 一个过程的在正文区的长度等于 结束位置 - 开始位置*/
 							curr_prod.size = static_cast<int>(code.size() - curr_prod.addr);
 							local_space->add(curr_prod);
-							/** 在　procedure 的最后加上过程返回语句*/
-							generate_code(fct::opr, 0, 0);
 						} else
 						{
 							error(17);
@@ -407,7 +361,7 @@ void procedure_declaration()
 			{
 				error(19);
 			}
-		}while(lexer->next_token() == "procedure");
+		}while(lexer->next_token() == "procedure" and lexer->get_token() == "procedure");
 	}
 }
 
@@ -423,7 +377,7 @@ void statement()
 					        Symbol *procedure = local_space->get(lexer->get_token());
 					        if (procedure not_eq nullptr)
 					        {
-						        generate_code(fct::cal, procedure->level, procedure->addr);
+						        generate_code(fct::cal,local_space->get_level() -  procedure->level, procedure->addr);
 					        } else
 					        {
 						        error(6);
@@ -467,11 +421,16 @@ void statement()
 					      {
 						      error(16);
 					      }
+					      /** here is one of the expand part, 'else' branch*/
 					      if (lexer->next_token() == "else")
 					      {
 						      lexer->get_token();
-						      code[cond_false_jmp].M = static_cast<int>(code.size() - 1);
+						      code[cond_false_jmp].M = static_cast<int>(code.size());
 						      statement();
+					      }
+					      else
+					      {
+						      code[cond_false_jmp].M = static_cast<int>(code.size());
 					      }
 					      code[if_finish_jmp].M = static_cast<int>(code.size());
 				      }
@@ -479,6 +438,7 @@ void statement()
 			 {
 				 "while", [&]
 				          {
+					          int jmp_back_pos = static_cast<int>(code.size());
 					          condition();
 					          generate_code(fct::jpc, 0, 0);
 					          int first_jmp = static_cast<int>(code.size() - 1);
@@ -490,7 +450,7 @@ void statement()
 					          {
 						          error(18);
 					          }
-					          generate_code(fct::jmp, 0, first_jmp);
+					          generate_code(fct::jmp, 0, jmp_back_pos);
 					          code[first_jmp].M = static_cast<int>(code.size());
 				          }
 				          
@@ -502,7 +462,7 @@ void statement()
 					         Symbol* variable = local_space->get(lexer->get_token());
 					         if (variable not_eq nullptr)
 					         {
-						         generate_code(fct::sto, variable->level, variable->addr);
+						         generate_code(fct::sto, local_space->get_level() - variable->level, variable->addr);
 					         }else
 					         {
 						         error(11);
@@ -518,7 +478,8 @@ void statement()
 			 },
 		};
 	
-	if (oper_table.count(curr_token) not_eq 0 )
+	/** if next token in the first set of statement, so get into corresponding branch to do some work*/
+	if (oper_table.count(lexer->next_token()) not_eq 0 )
 	{
 		curr_token = lexer->get_token();
 		oper_table[curr_token]();
@@ -542,7 +503,7 @@ void statement()
 			error(13);
 		}
 	}
-	/** statement 可以直接推导为空串，　到这直接退出即可*/
+	/** statement can be derived to an empty string, just return when reach here*/
 }
 
 void condition()
@@ -579,7 +540,7 @@ void condition()
 	else
 	{
 		expression();
-		if (rel_op.count(lexer->next_token()) == 0)
+		if (rel_op.count(lexer->next_token()) == 1)
 		{
 			curr_token = lexer->get_token();
 			expression();
@@ -605,28 +566,15 @@ void expression()
 		{
 			generate_code(fct::opr, 0, 1);
 		}
-		while (lexer->next_token() == "+" or lexer->next_token() == "-")
-		{
-			curr_token = lexer->get_token();
-			term();
-			switch (curr_token[0])
-			{
-				case '+':
-					generate_code(fct::opr, 0, 2);
-					break;
-				case '-':
-					generate_code(fct::opr, 0, 3);
-					break;
-				default:
-					break;
-			}
-			
-		}
+		
 	}
 	else
 	{
 		term();
-		while (lexer->next_token() == "+" or lexer->next_token() == "-")
+	}
+	if (lexer->next_token() == "+" or lexer->next_token() == "-")
+	{
+		do
 		{
 			curr_token = lexer->get_token();
 			term();
@@ -641,7 +589,7 @@ void expression()
 				default:
 					break;
 			}
-		}
+		} while (lexer->next_token() == "+" or lexer->next_token() == "-");
 	}
 }
 
@@ -689,6 +637,8 @@ void factor()
 	}
 	if (isnum(curr_token))
 	{
+		/** 	isnum condition judge ensure that
+		 *  stoi below will not throw a exception*/
 		int num = std::stoi(curr_token);
 		generate_code(fct::lit, 0, num);
 		return ;
@@ -701,7 +651,7 @@ void factor()
 				generate_code(fct::lit, 0, symbol->value);
 				break;
 			case object::variable :
-				generate_code(fct::lod, symbol->level, symbol->addr);
+				generate_code(fct::lod, local_space->get_level() - symbol->level, symbol->addr);
 				break;
 			case object::array :
 				// TODO here is going to implement
@@ -746,4 +696,18 @@ void show_code()
 		              std::cout<<code_line << ':' <<p_code<<std::endl;
 		              ++code_line;
 	              });
+}
+
+void save_code()
+{
+	std::ofstream of("/home/manout/pl0_compiler/asm_result", std::fstream::out);
+	std::string content;
+	std::vector<std::string> codeStr = code_to_str();
+	for (std::string& line : codeStr)
+	{
+		content.append(line);
+		content.push_back('\n');
+	}
+	of << content;
+	of.close();
 }
