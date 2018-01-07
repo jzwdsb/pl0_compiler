@@ -1,4 +1,5 @@
 var  m, n, r, q;
+array a[10], b[10];
 
 procedure gcd;
 	begin 
