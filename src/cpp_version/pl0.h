@@ -11,6 +11,27 @@
 
 #define NOT_INITIALIZE  0xffffffff
 
+
+/** Expand feature content
+ *  Array
+ *  	the instruction in the pl0 official can't implement the find an element in
+ *  the runtime, so in order to implement array, we have to expand the instruction
+ *  collection
+ *  	sta,
+ *  	lda,
+ *  the new instruction above have three operand
+ *  	L the Level subs
+ *  	M the address of the first element in an array
+ *  	the number on the top of the stack, indicate the offset of the element
+ *  	the offset number must be popped in order to have no effect to later operate
+ *  the store operate is bit different, it's has four operand, the L, M, offset and a
+ *  number to store, just to make sure that the number is one the top of the stack, and
+ *  the offset is on the second top of an stack
+ *
+ *  The EBNF of pl0 just add one line after the variable declaration
+ *  ' array-declaration = ::= ["array" ident"["number"]" {"," ident"["number"]"}";"]'
+ * */
+
 /** 标识符类型*/
 enum object
 {
@@ -27,7 +48,9 @@ enum fct
 	lit,
 	opr,
 	lod,
+	lda,
 	sto,
+	sta,
 	cal,
 	inc,
 	jmp,
@@ -59,7 +82,7 @@ public:
 	object type = object::abnormal;
 	int value = NOT_INITIALIZE;          /** only used by constant */
 	int level = NOT_INITIALIZE;          /** level, used by variable, array, procedure */
-	int addr = NOT_INITIALIZE;           /** address, used by procedure */
+	int addr = NOT_INITIALIZE;           /** address, used by procedure, array */
 	int size = NOT_INITIALIZE;           /** size, used by procedure */
 	Symbol() = default;
 	Symbol(const Symbol&) = default;
@@ -88,5 +111,5 @@ extern std::vector<std::string> code_to_str();
 extern void show_code();
 extern void save_code();
 /**	解释器*/
-void interpret();
+extern void interpret();
 #endif //CPP_VERSION_PL0_H

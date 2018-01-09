@@ -43,6 +43,7 @@ int base(int l)
  * 		２　跳转操作， 当发生跳转指令时，约定指令所指示的位置即为新的PC值(此点由编译器保证),
  * 		   跳转之后直接取指令然后更新PC
  * */
+
 void interpret()
 {
 	/**	初始化程序计数器，从翻译的 code 段起始位置计数*/
@@ -117,7 +118,7 @@ void interpret()
 					case 6:
 						/**	opr 0 6
 						 * 		is it odd? pop the stack and push 1 if odd, 0 if even*/
-						runtime_stack[ESP] = runtime_stack[ESP] % 2;
+						runtime_stack[ESP - 1] = runtime_stack[ESP - 1] % 2;
 						break;
 					case 7:
 						/**	opr 0 7
@@ -179,10 +180,21 @@ void interpret()
 				runtime_stack[ESP] = runtime_stack[base(IR.L) + IR.M];
 				++ESP;
 				break;
+			case fct::lda:
+				/**	 To load an array element, first thing to do is basically like the load operation
+				 *  the plus the base address of the array indicate by the field M to the top of the
+				 *  stack, so that we find the expected element address, the top of the stack must be
+				 *  popped*/
+				runtime_stack[ESP - 1] = runtime_stack[base(IR.L) + IR.M + runtime_stack[ESP - 1]];
+				++ESP;
+				break;
 			case fct::sto :
 				/** basically like the load operation*/
 				runtime_stack[base(IR.L) + IR.M] = runtime_stack[ESP - 1];
 				break;
+			case fct ::sta:
+				/** basically like the load operation*/
+				runtime_stack[base(IR.L) + IR.M + runtime_stack[ESP - 2]] = runtime_stack[ESP - 1];
 			case fct::cal :
 				/** Initialize static link, search backward to find it's direct external procedure*/
 				/** static link is also called access link, use to load variables*/
