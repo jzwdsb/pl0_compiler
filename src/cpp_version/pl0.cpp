@@ -293,6 +293,7 @@ void array_declaration()
 						{
 							error(2);
 						}
+						local_space->add(curr_symbol);
 						base_address += curr_symbol.size;
 						size_count += curr_symbol.size;
 						if (lexer->next_token() not_eq "]")
