@@ -36,6 +36,7 @@
 enum object
 {
 	constant,
+	inchar,
 	variable,
 	array,
 	procedure,
@@ -90,13 +91,26 @@ public:
 		name(std::move(name)){};
 };
 
-extern void generate_code(fct, int, int);
+/** 	In order to add char type to pl0,
+ * so change the stack element type to a
+ * union, one is char type, and an other
+ * is a int type, just change the sio, so
+ * it can output*/
+
+union Value
+{
+	char inchar;
+	int innum;
+	double indouble;
+};
+
+
 /** 以下函数若匹配成功则生成相应的 类P code代码，
  * 通过向前查看一个移进符号选择移进规则
  * 错误处理通过 error 输出错误信息后 exit(-1) 直接退出*/
-
 extern void program();
 extern void block();
+extern void char_declaration();
 extern void const_declaration();
 extern void var_declaration();
 extern void array_declaration();
