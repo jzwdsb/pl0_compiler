@@ -1,0 +1,18 @@
+var  i, j, k, sum;
+array a[10];
+begin 
+	i := 0;
+	while i < 10 do 
+		begin
+			a[i] := i;
+			i += 1;
+		end;
+	i := 0;
+	sum := 0;
+	while i < 10 do 
+		begin 
+			sum += a[i];
+			i += 1;
+		end;
+	write sum;
+end .
