@@ -186,7 +186,6 @@ void interpret()
 				 *  stack, so that we find the expected element address, the top of the stack must be
 				 *  popped*/
 				runtime_stack[ESP - 1].innum = runtime_stack[base(IR.L) + IR.M + runtime_stack[ESP - 1].innum].innum;
-				++ESP;
 				break;
 			case fct::sto :
 				/** basically like the load operation*/
@@ -195,6 +194,7 @@ void interpret()
 			case fct ::sta:
 				/** basically like the load operation*/
 				runtime_stack[base(IR.L) + IR.M + runtime_stack[ESP - 2].innum].innum = runtime_stack[ESP - 1].innum;
+				break;
 			case fct::cal :
 				/** Initialize static link, search backward to find it's direct external procedure*/
 				/** static link is also called access link, use to load variables*/
@@ -253,6 +253,7 @@ void interpret()
 							default:
 								error(25);
 						}
+						break;
 					default:
 						error(25);
 				}

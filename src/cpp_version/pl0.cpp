@@ -12,8 +12,8 @@
 #include "Lexer.h"
 
 /**	引用全局词法分析器*/
-extern std::unique_ptr<Scanner> scanner ;
-extern std::unique_ptr<Lexer>   lexer   ;
+extern Scanner* scanner ;
+extern Lexer*   lexer   ;
 
 const std::unordered_set<std::string> key_word_set
 	{
@@ -150,6 +150,7 @@ void block()
 {
 	SymbolTable* prev = local_space;
 	local_space = new SymbolTable(prev);
+	char_declaration();
 	const_declaration();
 	var_declaration();
 	array_declaration();
@@ -310,9 +311,10 @@ void array_declaration()
 	if (lexer->next_token() == "array")
 	{
 		lexer->get_token(); /** consume one token*/
-		curr_token = lexer->get_token();
+		
 		do
 		{
+			curr_token = lexer->get_token();
 			if (key_word_set.count(curr_token) == 0)
 			{
 				if (isalpha(curr_token[0]) or curr_token[0] == '_')
@@ -322,8 +324,9 @@ void array_declaration()
 					curr_symbol.type = object::array;
 					curr_symbol.level = local_space->get_level();
 					curr_symbol.addr = base_address;
-					if (lexer->next_token() not_eq "[")
+					if (lexer->next_token() == "[")
 					{
+						lexer->get_token();
 						try
 						{
 							curr_symbol.size = std::stoi(lexer->get_token());
@@ -340,7 +343,7 @@ void array_declaration()
 						local_space->add(curr_symbol);
 						base_address += curr_symbol.size;
 						size_count += curr_symbol.size;
-						if (lexer->next_token() not_eq "]")
+						if (lexer->next_token() == "]")
 						{
 							lexer->get_token();
 						} else
@@ -460,12 +463,12 @@ void statement()
 					      int if_finish_jmp = 0;
 					      if (lexer->next_token() == "then")
 					      {
+						      cond_false_jmp = static_cast<int>(code.size());
 						      generate_code(fct::jpc, 0, 0);
-						      cond_false_jmp = static_cast<int>(code.size() - 1);
 						      lexer->get_token();
 						      statement();
+						      if_finish_jmp = static_cast<int>(code.size());
 						      generate_code(fct::jmp, 0, 0);
-						      if_finish_jmp = static_cast<int>(code.size() - 1);
 					      } else
 					      {
 						      error(16);
@@ -559,21 +562,7 @@ void statement()
 		Symbol* ident = local_space->get(curr_token);
 		static std::unordered_map<std::string, int> assign_op
 			{
-				{
-					"+=", 2
-				},
-				{
-					"-=", 3
-				},
-				{
-					"*=", 4
-				},
-				{
-					"/=", 5
-				},
-				{
-					"%=", 7
-				}
+				{"+=", 2},	{"-=", 3},{"*=", 4},{"/=", 5},{"%=", 7}
 			};
 		
 		switch (ident->type)
@@ -588,11 +577,13 @@ void statement()
 				}
 				if (assign_op.count(lexer->next_token()) == 1)
 				{
+					curr_token = lexer->get_token();
 					generate_code(fct::lod, local_space->get_level() - ident->level, ident->addr);
 					expression();
-					generate_code(fct::opr, 0, assign_op[lexer->get_token()]);
+					generate_code(fct::opr, 0, assign_op[curr_token]);
 					generate_code(fct::sto, local_space->get_level() - ident->level, ident->addr);
-				}
+					return ;
+				}else
 				{
 					error(13);
 				}
@@ -600,6 +591,7 @@ void statement()
 			case object::array:
 				if (lexer->next_token() == "[")
 				{
+					lexer->get_token();
 					expression();
 					if (lexer->next_token() == "]")
 					{
@@ -613,11 +605,13 @@ void statement()
 						}
 						if (assign_op.count(lexer->next_token()) == 1)
 						{
-							generate_code(fct::lod, local_space->get_level() - ident->level, ident->addr);
+							curr_token = lexer->get_token();
+							generate_code(fct::lda, local_space->get_level() - ident->level, ident->addr);
 							expression();
-							generate_code(fct::opr, 0, assign_op[lexer->get_token()]);
-							generate_code(fct::sto, local_space->get_level() - ident->level, ident->addr);
-						}
+							generate_code(fct::opr, 0, assign_op[curr_token]);
+							generate_code(fct::sta, local_space->get_level() - ident->level, ident->addr);
+							return ;
+						}else
 						{
 							error(13);
 						}
@@ -752,15 +746,54 @@ void term()
 void factor()
 {
 	std::string curr_token;
-	Symbol* symbol = nullptr;
-	
+	Symbol* ident = nullptr;
+	std::unordered_map<std::string, int> self_op_code
+		{
+			{"++", 2}, {"--", 3}
+		};
 	if (lexer->next_token() == "++" or lexer->next_token() == "--")
 	{
 		std::string self_op = lexer->get_token();
 		curr_token = lexer->get_token();
-		if ((symbol = local_space->get(curr_token)) not_eq nullptr)
+		if ((ident = local_space->get(curr_token)) not_eq nullptr )
 		{
-			generate_code(fct::lod, local_space->get_level() - symbol->level, symbol->addr);
+			switch (ident->type)
+			{
+				case object::variable:
+					generate_code(fct::lod, local_space->get_level() - ident->level, ident->addr);
+					generate_code(fct::lit, 0, 1);
+					generate_code(fct::opr, 0, self_op_code[self_op]);
+					generate_code(fct::sto, local_space->get_level() - ident->level, ident->addr);
+					break;
+					
+				/** TODO, the pl0 stack model can't implement the self operate on array element*/
+				case object::array:
+					/*
+					if (lexer->next_token() == "[")
+					{
+						lexer->get_token();
+						expression();
+						if (lexer->next_token() == "]")
+						{
+							lexer->get_token();
+							generate_code(fct::lda, local_space->get_level() - ident->level, ident->addr);
+							generate_code(fct::lit, 0, 1);
+							generate_code(fct::opr, 0, self_op_code[self_op]);
+							generate_code(fct::sta, local_space->get_level() - ident->level, ident->addr);
+						}else
+						{
+							error(26);
+						}
+					}else
+					{
+						error(3);
+					}
+					 */
+					break;
+				default:
+					error(8);
+			}
+			
 		}else
 		{
 			error(11);
@@ -786,25 +819,25 @@ void factor()
 		generate_code(fct::lit, 0, std::stoi(curr_token));
 		return ;
 	}
-	if ((symbol = local_space->get(curr_token)) not_eq nullptr)
+	if ((ident = local_space->get(curr_token)) not_eq nullptr)
 	{
-		switch (symbol->type)
+		switch (ident->type)
 		{
 			case object::constant :
-				generate_code(fct::lit, 0, symbol->value);
+				generate_code(fct::lit, 0, ident->value);
 				break;
 			case object::variable :
-				generate_code(fct::lod, local_space->get_level() - symbol->level, symbol->addr);
+				generate_code(fct::lod, local_space->get_level() - ident->level, ident->addr);
 				break;
 			case object::array :
-				if (lexer->next_token() not_eq "[")
+				if (lexer->next_token() == "[")
 				{
 					lexer->get_token();
 					expression();
-					if (lexer->next_token() not_eq "]")
+					if (lexer->next_token() == "]")
 					{
 						lexer->get_token();
-						generate_code(fct::lda, local_space->get_level() - symbol->level, symbol->addr);
+						generate_code(fct::lda, local_space->get_level() - ident->level, ident->addr);
 					}else
 					{
 						error(26);

@@ -84,10 +84,6 @@ void Lexer::prepare()
 					ch = scanner->readChar();
 				}while (isdigit(ch) and not scanner->isEof());
 				token_table.push(std::move(curr_word));
-				if(not isblank(ch) and delimiter_string.find(ch) == std::string::npos)
-				{
-					error(19);
-				}
 			}
 			
 			

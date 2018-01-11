@@ -9,8 +9,8 @@
 #include "Scanner.h"
 #include "Lexer.h"
 
-std::unique_ptr<Scanner> scanner;
-std::unique_ptr<Lexer>   lexer;
+Scanner* scanner;
+Lexer*   lexer;
 
 /**	主程序的入口*/
 int main ()
@@ -18,8 +18,8 @@ int main ()
 	std::string filename;
 	std::cout << "please input the pl0 source file, full path" << std::endl;
 	std::cin >> filename;
-	scanner.reset(new Scanner(filename));
-	lexer.reset(new Lexer(scanner.get()));
+	scanner = new Scanner(filename);
+	lexer = new Lexer(scanner);
 	program();
 	show_code();
 	save_code();
