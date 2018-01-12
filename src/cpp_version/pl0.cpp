@@ -33,9 +33,9 @@ const std::unordered_set<std::string> key_word_set
 	    "write",
 	    "repeat",
 	    "odd",
-	    "procedure",
 	    "until",
-	    "sqrt"
+	    "sqrt",
+	    "array"
 	 };
 
 
@@ -84,7 +84,7 @@ const std::array<std::string, 33> err_msg
 		/* 19*/      "Incorrect symbol.",
 		/* 20*/      "Relative operators expected",
 		/* 21*/      "Procedure identifier can not be in an expression",
-		/* 22*/      "Missing ')'.",
+		/* 22*/      "Missing ')'. '('",
 		/* 23*/      "The symbol can not be followed by an factor",
 		/* 24*/      "The symbol can not be as the beginning of an expression",
 		/* 25*/      "Invalid Instruction",
@@ -310,8 +310,8 @@ void array_declaration()
 	int size_count = 0;
 	if (lexer->next_token() == "array")
 	{
-		lexer->get_token(); /** consume one token*/
-		
+		/** consume one token*/
+		lexer->get_token();
 		do
 		{
 			curr_token = lexer->get_token();
@@ -544,6 +544,55 @@ void statement()
 					          generate_code(fct::sio, 0, 1);
 				          }
 			 },
+			 {
+				 "for", [&]
+				        {
+					        if (lexer->next_token() == "(")
+					        {
+						
+						
+						        statement();
+						        int cond_false_jmp = 0;
+						        int continue_jmp = 0;
+						        int state_finish_jmp = 0;
+						        int update_jmp = 0;
+						        if (lexer->next_token() == ";")
+						        {
+							        lexer->get_token();
+							        update_jmp = static_cast<int>(code.size());
+							        condition();
+							        cond_false_jmp = static_cast<int>(code.size());
+							        generate_code(fct::jpc, 0, 0);
+							        continue_jmp = static_cast<int>(code.size());
+							        generate_code(fct::jmp, 0, 0);
+							        if (lexer->next_token() == ";")
+							        {
+								        lexer->get_token();
+								        state_finish_jmp = static_cast<int>(code.size());
+								        statement();
+								        generate_code(fct::jmp, 0, update_jmp);
+								        if (lexer->next_token() == ")")
+								        {
+									        lexer->get_token();
+									        code[continue_jmp].M = static_cast<int>(code.size());
+									        statement();
+									        generate_code(fct::jmp, 0, state_finish_jmp);
+									        code[cond_false_jmp].M = static_cast<int>(code.size());
+								        }
+							        } else
+							        {
+								        error(17);
+							        }
+						        } else
+						        {
+							        error(17);
+						        }
+					        }else
+					        {
+						        error(22);
+					        }
+				        }
+			 }
 		};
 	
 	
@@ -635,28 +684,8 @@ void statement()
 void condition()
 {
 	std::string curr_token;
-	static std::unordered_map<std::string, std::function<void()>> relation_OP
-		({
-			 {
-				 "=", [&]{generate_code(fct::opr, 0, 8);}
-			 },
-			 {
-				"<>", [&]{generate_code(fct::opr, 0, 9);}
-			 },
-			 {
-				">", [&]{generate_code(fct::opr, 0, 10);}
-			 },
-			 {
-				">=", [&]{generate_code(fct::opr, 0, 11);}
-			 },
-			 {
-				"<", [&]{generate_code(fct::opr, 0, 12);}
-			 },
-			 {
-				"<=", [&]{generate_code(fct::opr, 0, 13);}
-			 }
-			 
-		 });
+	static std::unordered_map<std::string, int> relation_OP
+		({ { "=", 8 }, {"<>", 9}, {">", 10}, {">=", 11}, {"<", 12},{"<=", 13}});
 	if (lexer->next_token() == "odd")
 	{
 		curr_token = lexer->get_token();
@@ -670,15 +699,13 @@ void condition()
 		{
 			curr_token = lexer->get_token();
 			expression();
-			relation_OP[curr_token]();
+			generate_code(fct::opr, 0, relation_OP[curr_token]);
 		}
 		else
 		{
 			error(20);
 		}
 	}
-	
-	
 }
 
 void expression()

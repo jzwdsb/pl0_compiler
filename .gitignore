@@ -7,7 +7,6 @@ pl0
 scanner
 *iml
 *class
-asm_result
 package-list
 src/java_version/.idea/*
 src/*/.vscode/*
