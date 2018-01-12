@@ -1,11 +1,10 @@
-var  m, n, r, q;
+var  m, n, r;
 
 procedure gcd;
 	begin 
 		while r <> 0 do
 			begin 
-				q := m / n;
-				r := m - q * n;
+				r := m %n;
 				m := n;
 				n := r;
 			end
