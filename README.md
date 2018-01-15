@@ -33,7 +33,7 @@ In the current finished version in cpp, the tokenizer has two parts
     1. Scanner
     2. Lexer
 
-Scanner transform the source file into char stream, Lexer transform the char stream in to token 
+Scanner transform the source file into char stream, Lexer transform the char stream in to token
 Stream.
 
 ### Parser
@@ -73,4 +73,21 @@ that compose the block.
 The Target Code Generator just like the tokenizer, both of them are called by the
 Parser when it needed.
 
-Generally, The Parser 
+Generally, The Parser calls the code generator when it meets a terminal symbol, such
+as '+', '-', '*', '/' etc. Since the pl0 runtime model is a stack, so the Parser transform
+the expression in to Anti Polish Notationm, The target code of operator must be generated
+after it's two operand were pushed into stack.
+
+General form like this
+
+```c++
+    term();
+    term();
+    generate_code(...);
+```
+
+We need to define the process on the noterminal symbol handling. Take block for example,
+we need to add jump instruction to the position where the statement started after it's variable
+declaration in order to avoid run the code which is not in the current procedure.
+After the statement is over, we need add return instruction so the current procedure can finished
+and release the memory it used. When the top procedure is returned, the program is finished.
