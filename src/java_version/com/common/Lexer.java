@@ -68,11 +68,12 @@ public class Lexer
 
     }
 
-    public String getToken() throws IOException
+    public Token getToken() throws IOException
     {
+        return ;
     }
 
-    public String nextToken() throws IOException
+    public Token nextToken() throws IOException
     {
     }
 }

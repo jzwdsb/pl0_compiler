@@ -3,12 +3,6 @@ import com.common.Lexer;
 import java.io.*;
 
 public class Main {
-    private static String keywords     = "\\s*(const|var|procedure|begin|end|if|then|while" +
-                                                "|do|read|call|write|writeln|module|int)\\s*";
-    private static String constant     = "[0-9]+";
-    private static String identifier    = "[A-Za-z_][A-Za-z_0-9]*";
-    private static String operator     = "\\+|-|\\*|/|#|=|<|>|<>|:=|>=|<=";
-    private static String delimiter    = "[,.;():]";
     public static void main(String[] args) throws IOException {
         /**
 	    String filename = args[0];
