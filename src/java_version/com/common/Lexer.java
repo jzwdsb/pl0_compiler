@@ -12,13 +12,14 @@ public class Lexer
     {
         KEYWORD("begin|end|if|then|else|const|procedure|var|int|do|while|call|read|write|repeat|odd|until|sqrt|array"),
 
-        OPERATOR("[*/+\\-]"),
+        OPERATOR("\\+|-|\\*|/|:=|<>|<|>|>=|<=|=|\\+\\+|--|[|]"),
 
         DELIMITER("[\\.;,]"),
 
         NUMBER("-?\\d+"),
 
         IDENTIFIER("[A-Za-z_][\\w_]*");
+
         public final String pattern;
 
         TokenType(String pattern)
