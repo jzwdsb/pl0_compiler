@@ -38,7 +38,7 @@ public class Main {
         Lexer lexer = new Lexer("/home/manout/pl0_compiler/demo.pl0");
         while (lexer.nextToken() != null)
         {
-            System.out.println(lexer.getToken());
+            lexer.getToken();
         }
     }
 }

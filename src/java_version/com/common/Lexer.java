@@ -78,6 +78,9 @@ public class Lexer
     {
         this.reader.close();
     }
+
+    /**     java regex model don't have the feature to obtain the names of
+     * the named capturing group, otherwise the code will much shorter*/
     private void prepare() throws IOException
     {
         while(buffer.isEmpty() && reader.ready())
@@ -86,6 +89,7 @@ public class Lexer
             Matcher matcher = tokenPattern.matcher(line);
             while (matcher.find())
             {
+                System.out.println(matcher.);
                 if (matcher.group(TokenType.KEYWORD.name()) != null)
                 {
                     buffer.add(new Token(TokenType.KEYWORD, matcher.group(TokenType.KEYWORD.name())));
