@@ -33,7 +33,7 @@ In the current finished version in cpp, the tokenizer has two parts
     1. Scanner
     2. Lexer
 
-Scanner transform the source file into char stream, Lexer transform the char stream in to token
+Scanner transform the source file into char stream, Lexer transform the char stream into token
 Stream.
 
 ### Parser
