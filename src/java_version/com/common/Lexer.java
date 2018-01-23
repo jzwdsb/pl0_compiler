@@ -89,7 +89,6 @@ public class Lexer
             Matcher matcher = tokenPattern.matcher(line);
             while (matcher.find())
             {
-                System.out.println(matcher.);
                 if (matcher.group(TokenType.KEYWORD.name()) != null)
                 {
                     buffer.add(new Token(TokenType.KEYWORD, matcher.group(TokenType.KEYWORD.name())));
@@ -114,12 +113,20 @@ public class Lexer
     public Token getToken() throws IOException
     {
         prepare();
-        return buffer.poll();
+        if (! buffer.isEmpty())
+        {
+            return buffer.poll();
+        }
+        return null;
     }
 
     public Token nextToken() throws IOException
     {
         prepare();
-        return buffer.peek();
+        if (! buffer.isEmpty())
+        {
+            return buffer.peek();
+        }
+        return null;
     }
 }
