@@ -28,7 +28,7 @@ which belongs to the current nonterminal symbol.
 The nextToken method should allow the parser to look ahead one token in order to select the
 different rlues to move on.
 
-In the current finished version in cpp, the tokenizer has two parts
+In the current finished version in cpp, the Lexer has two parts
 
     1. Scanner
     2. Lexer
