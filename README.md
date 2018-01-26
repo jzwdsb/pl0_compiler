@@ -4,7 +4,7 @@
 
 The general compiler structure can divide into three parts ignore the difference of language
 
-    1. Tokenizer
+    1. Lexer
     2. Parser
     3. Target Code Generator
 
@@ -14,9 +14,9 @@ The basic data flows likes the picture belows
 
 ![data_flows](doc/basic-data-flow.png)
 
-### Tokenizer
+### Lexer
 
-The Tokenizer transform the input file in to a token stream, it should be at least have
+The Lexer transform the input file in to a token stream, it should be at least have
 two interface
 
 - getToken
