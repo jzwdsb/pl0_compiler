@@ -1,6 +1,7 @@
 package com.common;
 
 import com.common.Lexer;
+import com.sun.org.apache.xml.internal.serializer.ToTextSAXHandler;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -9,12 +10,12 @@ import java.util.ArrayList;
 public class Parser
 {
     private Lexer lexer ;
-    private ArrayList<Instruction> code;
+    private ArrayList<Instruction> code = new ArrayList<>();
+    private int baseAddress = 0;
     SymbolTable localSpace;
     public Parser (Lexer lexer)
     {
         this.lexer = lexer;
-        this.code = new ArrayList<>();
     }
 
     public void parseCode() throws IOException
@@ -37,6 +38,7 @@ public class Parser
     {
         SymbolTable prev = localSpace;
         localSpace = new SymbolTable(prev);
+        baseAddress = 3;
         const_declaration();
         var_declaration();
         int pos = code.size();
@@ -103,17 +105,90 @@ public class Parser
         int variableCount = 0;
         if (lexer.nextToken().value.equals("int") || lexer.nextToken().value.equals("var"))
         {
-
+            lexer.getToken();
+            do
+            {
+                currToken = lexer.getToken();
+                if (currToken.type == Lexer.TokenType.IDENTIFIER)
+                {
+                    Symbol currVar = new Symbol(currToken.value);
+                    currVar.type = Object.variable;
+                    currVar.addr = baseAddress;
+                    currVar.level = localSpace.getLevel();
+                    localSpace.add(currVar);
+                    ++baseAddress;
+                    ++variableCount;
+                }else
+                {
+                    error(19);
+                }
+            }while(lexer.nextToken().value.equals(";") && lexer.getToken().value.equals(";"));
+        }
+        if (lexer.nextToken().value.equals(";"))
+        {
+            lexer.getToken();
+        }else
+        {
+            error(5);
         }
     }
 
-    private void procedure_declaration()
+    private void procedure_declaration() throws IOException
     {
-
+        Lexer.Token currToken;
+        while (lexer.nextToken().value.equals("procedure"))
+        {
+            lexer.getToken();
+            currToken = lexer.getToken();
+            if (currToken.type == Lexer.TokenType.KEYWORD)
+            {
+                Symbol currProcd = new Symbol(currToken.value);
+                currProcd.type = Object.procedure;
+                currProcd.addr = code.size();
+                currProcd.level = localSpace.getLevel();
+                if (lexer.nextToken().equals(";"))
+                {
+                    lexer.getToken();
+                    block();
+                    if (lexer.nextToken().value.equals(";"))
+                    {
+                        lexer.getToken();
+                        currProcd.size = code.size() - currProcd.addr;
+                        localSpace.add(currProcd);
+                    }else
+                    {
+                        error(17);
+                    }
+                }else
+                {
+                    error(17);
+                }
+            }
+        }
     }
 
-    private void statement()
+    private void statement() throws IOException
     {
+        Lexer.Token currToken;
+        switch (lexer.nextToken().value)
+        {
+            case "begin":
+                break;
+            case "call":
+                break;
+            case "if":
+                break;
+            case "while":
+                break;
+            case "for":
+                break;
+            case "read":
+                break;
+            case "write":
+                break;
+            default:
+                    break;
+        }
 
     }
 
@@ -139,7 +214,7 @@ public class Parser
 
     private void generateCode(Fct op, int l, int m)
     {
-        this.code.add(new Instruction(op, l, m)):
+        this.code.add(new Instruction(op, l, m));
     }
 
 }

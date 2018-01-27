@@ -18,7 +18,7 @@ public class Lexer
 
         NUMBER("-?\\d+"),
 
-        IDENTIFIER("[A-Za-z_][\\w_]*");
+        IDENTIFIER("[\\w_][\\w_]*");
 
         public final String pattern;
 
