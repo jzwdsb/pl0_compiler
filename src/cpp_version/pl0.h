@@ -16,10 +16,10 @@
  *  Array
  *  	the instruction in the pl0 official can't implement the find an element in
  *  the runtime, so in order to implement array, we have to expand the instruction
- *  collection
+ *  set
  *  	sta,
  *  	lda,
- *  the new instruction above have three operand
+ *  lda have three operand
  *  	L the Level subs
  *  	M the address of the first element in an array
  *  	the number on the top of the stack, indicate the offset of the element
