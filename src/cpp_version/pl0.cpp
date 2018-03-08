@@ -150,6 +150,8 @@ void block()
 {
 	SymbolTable* prev = local_space;
 	local_space = new SymbolTable(prev);
+	/** reset base address*/
+    base_address = 3;
 	char_declaration();
 	const_declaration();
 	var_declaration();
@@ -168,7 +170,6 @@ void char_declaration()
 {
 	std::string curr_token;
 	int char_count = 0;
-	base_address = 3;
 	if (lexer->next_token() == "char")
 	{
 		lexer->get_token();
@@ -611,7 +612,7 @@ void statement()
 		Symbol* ident = local_space->get(curr_token);
 		static std::unordered_map<std::string, int> assign_op
 			{
-				{"+=", 2},	{"-=", 3},{"*=", 4},{"/=", 5},{"%=", 7}
+				{"+=", 2}, {"-=", 3}, {"*=", 4}, {"/=", 5}, {"%=", 7}
 			};
 		
 		switch (ident->type)
@@ -654,6 +655,10 @@ void statement()
 						}
 						if (assign_op.count(lexer->next_token()) == 1)
 						{
+                            /**  In the runtime, here will run into a unexpected action.
+                             * the offset is already consumed, so the store operation can't find
+                             * the right address of the array element
+                             * */
 							curr_token = lexer->get_token();
 							generate_code(fct::lda, local_space->get_level() - ident->level, ident->addr);
 							expression();
