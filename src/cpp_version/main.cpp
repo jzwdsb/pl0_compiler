@@ -13,12 +13,16 @@ Scanner* scanner;
 Lexer*   lexer;
 
 /**	主程序的入口*/
-int main ()
+int main (int argc, char* argv[])
 {
-	std::string filename;
-	std::cout << "please input the pl0 source file, full path" << std::endl;
-	std::cin >> filename;
-	scanner = new Scanner(filename);
+	if (argc <  2)
+	{
+		std::cout << "usage: pl0 <source file>";
+		return 0;
+	}
+
+	std::string filepath(argv[1]);
+	scanner = new Scanner(filepath);
 	lexer = new Lexer(scanner);
 	program();
 	show_code();

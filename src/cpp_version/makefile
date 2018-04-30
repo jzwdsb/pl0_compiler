@@ -17,4 +17,7 @@ interpret.o:
 clean:
 	rm $(objects)
 
+.PHONY: clean_all
+clean_all:
+	rm $(objects) $(target)
 
