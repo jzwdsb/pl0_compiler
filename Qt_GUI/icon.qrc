@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file alias="newfile">resource/icon/new_file.png</file>
+        <file alias="openfile">resource/icon/open-file.png</file>
+        <file alias="compiler">resource/icon/compile.png</file>
+        <file alias="run">resource/icon/run.png</file>
+        <file alias="save">resource/icon/save.png</file>
+        <file alias="show">resource/icon/show.png</file>
+        <file alias="windowicon">resource/icon/windowicon.png</file>
+        <file alias="saveAs">resource/icon/saveAs.png</file>
+    </qresource>
+</RCC>

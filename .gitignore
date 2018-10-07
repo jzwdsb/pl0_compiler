@@ -8,6 +8,7 @@ pl0
 scanner
 *iml
 *class
+*pro*
 package-list
 src/java_version/.idea/*
 src/*/.vscode/*
